@@ -1,0 +1,206 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ========== ENUMS ==========
+enum JobLevel {
+  ENTRY
+  MID
+  SENIOR
+  LEAD
+  MANAGER
+  DIRECTOR
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
+}
+
+enum NoteType {
+  INTERVIEW
+  FOLLOW_UP
+  FEEDBACK
+  RESEARCH
+  REMINDER
+  OTHER
+}
+
+// ========== MODELS ==========
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  phone        String?
+  profileImage String?  @map("profile_image")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  jobApplications JobApplication[]
+
+  @@map("users")
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  industry    String?
+  website     String?
+  location    String?
+  description String?
+  logoUrl     String?  @map("logo_url")
+  size        String?  // "1-10", "11-50", "51-200", etc
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  jobApplications JobApplication[]
+
+  @@map("companies")
+}
+
+model Status {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String?  // Hex color code
+  sortOrder Int      @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  jobApplications JobApplication[]
+
+  @@map("statuses")
+}
+
+model JobApplication {
+  id               String          @id @default(cuid())
+  userId           String          @map("user_id")
+  companyId        String          @map("company_id")
+  statusId         String          @map("status_id")
+  jobTitle         String          @map("job_title")
+  jobLevel         JobLevel?       @map("job_level")
+  employmentType   EmploymentType? @map("employment_type")
+  salaryMin        Float?          @map("salary_min")
+  salaryMax        Float?          @map("salary_max")
+  currency         String          @default("IDR")
+  location         String?
+  isRemote         Boolean         @default(false) @map("is_remote")
+  jobUrl           String?         @map("job_url")
+  jobDescription   String?         @map("job_description")
+  requirements     String?         // Job requirements
+  appliedDate      DateTime        @map("applied_date")
+  responseDeadline DateTime?       @map("response_deadline")
+  personalNotes    String?         @map("personal_notes")
+  priority         Int             @default(3) // 1=High, 2=Medium, 3=Low
+  isFavorite       Boolean         @default(false) @map("is_favorite")
+  source           String?         // "LinkedIn", "JobStreet", "Company Website", etc
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company                @relation(fields: [companyId], references: [id])
+  status    Status                 @relation(fields: [statusId], references: [id])
+  notes     ApplicationNote[]
+  documents ApplicationDocument[]
+  activities ApplicationActivity[]
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([statusId])
+  @@index([appliedDate])
+  @@index([priority])
+  @@map("job_applications")
+}
+
+model ApplicationNote {
+  id               String   @id @default(cuid())
+  jobApplicationId String   @map("job_application_id")
+  title            String
+  content          String
+  noteType         NoteType @default(OTHER) @map("note_type")
+  noteDate         DateTime @map("note_date")
+  isImportant      Boolean  @default(false) @map("is_important")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  jobApplication JobApplication @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+
+  @@index([jobApplicationId])
+  @@index([noteDate])
+  @@map("application_notes")
+}
+
+model DocumentType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isRequired  Boolean  @default(false) @map("is_required")
+  sortOrder   Int      @default(1) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  documents ApplicationDocument[]
+
+  @@map("document_types")
+}
+
+model ApplicationDocument {
+  id               String   @id @default(cuid())
+  jobApplicationId String   @map("job_application_id")
+  documentTypeId   String   @map("document_type_id")
+  fileName         String   @map("file_name")
+  originalName     String   @map("original_name")
+  filePath         String   @map("file_path")
+  fileType         String   @map("file_type")
+  fileSize         Int      @map("file_size") // in bytes
+  version          String   @default("v1")
+  isActive         Boolean  @default(true) @map("is_active")
+  uploadedAt       DateTime @default(now()) @map("uploaded_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  jobApplication JobApplication @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+  documentType   DocumentType   @relation(fields: [documentTypeId], references: [id])
+
+  @@index([jobApplicationId])
+  @@index([documentTypeId])
+  @@map("application_documents")
+}
+
+model ApplicationActivity {
+  id               String   @id @default(cuid())
+  jobApplicationId String   @map("job_application_id")
+  activity         String   // "Status changed", "Note added", "Document uploaded", etc
+  description      String?
+  metadata         Json?    // Additional data as JSON
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Relations
+  jobApplication JobApplication @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+
+  @@index([jobApplicationId])
+  @@index([createdAt])
+  @@map("application_activities")
+}
