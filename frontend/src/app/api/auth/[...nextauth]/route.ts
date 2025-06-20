@@ -1,0 +1,82 @@
+import NextAuth from 'next-auth'
+import { NextAuthOptions } from 'next-auth'
+import GoogleProvider from 'next-auth/providers/google'
+
+const authOptions: NextAuthOptions = {
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+  ],
+  callbacks: {
+    async signIn({ user, account, profile }) {
+      if (!account || !user.email) return false;
+
+      try {
+        // Send user data to our backend OAuth callback
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/callback`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: user.email,
+            firstName: user.name?.split(' ')[0] || '',
+            lastName: user.name?.split(' ').slice(1).join(' ') || '',
+            profileImage: user.image,
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('OAuth callback failed:', await response.text());
+          return false;
+        }
+
+        const data = await response.json();
+        
+        // Store the backend JWT token in the session
+        if (data.success && data.data.token) {
+          user.backendToken = data.data.token;
+          user.backendUser = data.data.user;
+        }
+
+        return true;
+      } catch (error) {
+        console.error('OAuth sign-in error:', error);
+        return false;
+      }
+    },
+    async jwt({ token, user }) {
+      // Persist the OAuth access_token and user data
+      if (user) {
+        token.backendToken = user.backendToken;
+        token.backendUser = user.backendUser;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // Send properties to the client
+      session.backendToken = token.backendToken as string;
+      session.user = {
+        ...session.user,
+        ...token.backendUser,
+      };
+      return session;
+    },
+  },
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  },
+  session: {
+    strategy: 'jwt',
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+}
+
+const handler = NextAuth(authOptions)
+
+export { handler as GET, handler as POST } 

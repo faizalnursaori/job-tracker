@@ -1,0 +1,1395 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Job Tracker API",
+        "description": "A comprehensive job application tracking system API with OAuth support",
+        "version": "1.0.0",
+        "contact": {
+            "name": "Job Tracker Support",
+            "email": "support@jobtracker.dev"
+        }
+    },
+    "servers": [
+        {
+            "url": "http://localhost:5000/api",
+            "description": "Development server"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "User authentication and OAuth operations"
+        },
+        {
+            "name": "Job Applications",
+            "description": "Job application management"
+        },
+        {
+            "name": "Companies",
+            "description": "Company information management"
+        },
+        {
+            "name": "Statuses",
+            "description": "Application status management"
+        },
+        {
+            "name": "Notes",
+            "description": "Application notes management"
+        },
+        {
+            "name": "Health",
+            "description": "System health checks"
+        }
+    ],
+    "paths": {
+        "/auth/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register a new user",
+                "description": "Create a new user account with email and password",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "firstName",
+                                    "lastName"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 6
+                                    },
+                                    "firstName": {
+                                        "type": "string"
+                                    },
+                                    "lastName": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "user": {
+                                                    "$ref": "#/components/schemas/User"
+                                                },
+                                                "token": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid input or user already exists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login user",
+                "description": "Authenticate user with email and password",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/oauth/callback": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "OAuth callback",
+                "description": "Handle OAuth provider callback and create/link user accounts",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "firstName",
+                                    "lastName",
+                                    "provider",
+                                    "providerAccountId"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "firstName": {
+                                        "type": "string"
+                                    },
+                                    "lastName": {
+                                        "type": "string"
+                                    },
+                                    "profileImage": {
+                                        "type": "string"
+                                    },
+                                    "provider": {
+                                        "type": "string",
+                                        "enum": [
+                                            "google",
+                                            "github"
+                                        ]
+                                    },
+                                    "providerAccountId": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OAuth authentication successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid OAuth data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/profile": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get user profile",
+                "description": "Retrieve authenticated user's profile information",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - invalid or missing token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/job-applications": {
+            "get": {
+                "tags": [
+                    "Job Applications"
+                ],
+                "summary": "Get job applications",
+                "description": "Retrieve paginated list of job applications with optional filters",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search term for job title or company name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "company",
+                        "in": "query",
+                        "description": "Filter by company ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job applications retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JobApplicationsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Job Applications"
+                ],
+                "summary": "Create job application",
+                "description": "Create a new job application",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateJobApplicationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Job application created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JobApplicationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/companies": {
+            "get": {
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "Get companies",
+                "description": "Retrieve list of companies",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Companies retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompaniesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "Create company",
+                "description": "Create a new company",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateCompanyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Company created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompanyResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/statuses": {
+            "get": {
+                "tags": [
+                    "Statuses"
+                ],
+                "summary": "Get statuses",
+                "description": "Retrieve list of application statuses",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statuses retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StatusesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/notes": {
+            "get": {
+                "tags": [
+                    "Notes"
+                ],
+                "summary": "Get notes",
+                "description": "Retrieve notes for a job application",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "jobApplicationId",
+                        "in": "query",
+                        "required": true,
+                        "description": "Job application ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notes retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "description": "Check API and database connectivity",
+                "responses": {
+                    "200": {
+                        "description": "Service is healthy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HealthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "schemas": {
+            "RegisterRequest": {
+                "type": "object",
+                "required": [
+                    "email",
+                    "password",
+                    "firstName",
+                    "lastName"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "minLength": 6,
+                        "example": "securePassword123"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "example": "John"
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "example": "Doe"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "+1234567890"
+                    }
+                }
+            },
+            "LoginRequest": {
+                "type": "object",
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "securePassword123"
+                    }
+                }
+            },
+            "OAuthCallbackRequest": {
+                "type": "object",
+                "required": [
+                    "email",
+                    "firstName",
+                    "lastName",
+                    "provider",
+                    "providerAccountId"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@gmail.com"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "example": "John"
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "example": "Doe"
+                    },
+                    "profileImage": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "https://lh3.googleusercontent.com/a/profile-image"
+                    },
+                    "provider": {
+                        "type": "string",
+                        "enum": [
+                            "google",
+                            "github"
+                        ],
+                        "example": "google"
+                    },
+                    "providerAccountId": {
+                        "type": "string",
+                        "example": "1234567890"
+                    }
+                }
+            },
+            "AuthResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "User registered successfully"
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "user": {
+                                "$ref": "#/components/schemas/User"
+                            },
+                            "token": {
+                                "type": "string",
+                                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                            }
+                        }
+                    }
+                }
+            },
+            "ProfileResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "user": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/User"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "emailVerified": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "nullable": true
+                                            },
+                                            "_count": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "jobApplications": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    }
+                                                }
+                                            },
+                                            "accounts": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "provider": {
+                                                            "type": "string",
+                                                            "example": "google"
+                                                        },
+                                                        "type": {
+                                                            "type": "string",
+                                                            "example": "oauth"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "cuid123456789"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@example.com"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "example": "John"
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "example": "Doe"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "+1234567890"
+                    },
+                    "profileImage": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "https://example.com/profile.jpg"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    }
+                }
+            },
+            "JobApplicationsResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "jobApplications": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/JobApplication"
+                                }
+                            },
+                            "pagination": {
+                                "$ref": "#/components/schemas/Pagination"
+                            }
+                        }
+                    }
+                }
+            },
+            "JobApplicationResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "jobApplication": {
+                                "$ref": "#/components/schemas/JobApplication"
+                            }
+                        }
+                    }
+                }
+            },
+            "CreateJobApplicationRequest": {
+                "type": "object",
+                "required": [
+                    "companyId",
+                    "statusId",
+                    "jobTitle",
+                    "appliedDate"
+                ],
+                "properties": {
+                    "companyId": {
+                        "type": "string",
+                        "example": "cuid123456789"
+                    },
+                    "statusId": {
+                        "type": "string",
+                        "example": "cuid123456789"
+                    },
+                    "jobTitle": {
+                        "type": "string",
+                        "example": "Senior Software Engineer"
+                    },
+                    "jobLevel": {
+                        "type": "string",
+                        "enum": [
+                            "ENTRY",
+                            "MID",
+                            "SENIOR",
+                            "LEAD",
+                            "MANAGER",
+                            "DIRECTOR"
+                        ],
+                        "example": "SENIOR"
+                    },
+                    "employmentType": {
+                        "type": "string",
+                        "enum": [
+                            "FULL_TIME",
+                            "PART_TIME",
+                            "CONTRACT",
+                            "FREELANCE",
+                            "INTERNSHIP"
+                        ],
+                        "example": "FULL_TIME"
+                    },
+                    "appliedDate": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-01-01"
+                    },
+                    "location": {
+                        "type": "string",
+                        "example": "San Francisco, CA"
+                    },
+                    "isRemote": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "salaryMin": {
+                        "type": "number",
+                        "example": 100000
+                    },
+                    "salaryMax": {
+                        "type": "number",
+                        "example": 150000
+                    },
+                    "currency": {
+                        "type": "string",
+                        "example": "USD"
+                    },
+                    "jobUrl": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "https://company.com/jobs/123"
+                    },
+                    "jobDescription": {
+                        "type": "string",
+                        "example": "We are looking for a Senior Software Engineer..."
+                    },
+                    "requirements": {
+                        "type": "string",
+                        "example": "5+ years of experience with React, Node.js..."
+                    },
+                    "personalNotes": {
+                        "type": "string",
+                        "example": "This looks like a great opportunity"
+                    },
+                    "priority": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 3,
+                        "example": 1
+                    },
+                    "source": {
+                        "type": "string",
+                        "example": "LinkedIn"
+                    }
+                }
+            },
+            "JobApplication": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "cuid123456789"
+                    },
+                    "jobTitle": {
+                        "type": "string",
+                        "example": "Senior Software Engineer"
+                    },
+                    "jobLevel": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "SENIOR"
+                    },
+                    "employmentType": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "FULL_TIME"
+                    },
+                    "location": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "San Francisco, CA"
+                    },
+                    "isRemote": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "salaryMin": {
+                        "type": "number",
+                        "nullable": true,
+                        "example": 100000
+                    },
+                    "salaryMax": {
+                        "type": "number",
+                        "nullable": true,
+                        "example": 150000
+                    },
+                    "currency": {
+                        "type": "string",
+                        "example": "USD"
+                    },
+                    "appliedDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "priority": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "isFavorite": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "source": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "LinkedIn"
+                    },
+                    "personalNotes": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "This looks like a great opportunity"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/Company"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/Status"
+                    }
+                }
+            },
+            "CompaniesResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "companies": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Company"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "CompanyResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "company": {
+                                "$ref": "#/components/schemas/Company"
+                            }
+                        }
+                    }
+                }
+            },
+            "CreateCompanyRequest": {
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "TechCorp Inc."
+                    },
+                    "industry": {
+                        "type": "string",
+                        "example": "Technology"
+                    },
+                    "website": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "https://techcorp.com"
+                    },
+                    "location": {
+                        "type": "string",
+                        "example": "San Francisco, CA"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Leading technology company"
+                    },
+                    "size": {
+                        "type": "string",
+                        "example": "501-1000"
+                    }
+                }
+            },
+            "Company": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "cuid123456789"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "TechCorp Inc."
+                    },
+                    "industry": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "Technology"
+                    },
+                    "website": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "https://techcorp.com"
+                    },
+                    "location": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "San Francisco, CA"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "Leading technology company"
+                    },
+                    "logoUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "https://techcorp.com/logo.png"
+                    },
+                    "size": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "501-1000"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    }
+                }
+            },
+            "StatusesResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "statuses": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Status"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Status": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "cuid123456789"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Applied"
+                    },
+                    "color": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "#3B82F6"
+                    },
+                    "sortOrder": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    }
+                }
+            },
+            "NotesResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "notes": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Note"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Note": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "cuid123456789"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Interview scheduled"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "Phone interview scheduled for Monday at 2pm"
+                    },
+                    "noteType": {
+                        "type": "string",
+                        "enum": [
+                            "INTERVIEW",
+                            "FOLLOW_UP",
+                            "FEEDBACK",
+                            "RESEARCH",
+                            "REMINDER",
+                            "OTHER"
+                        ],
+                        "example": "INTERVIEW"
+                    },
+                    "noteDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "isImportant": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    }
+                }
+            },
+            "HealthResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Job Tracker API is healthy"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "environment": {
+                        "type": "string",
+                        "example": "development"
+                    },
+                    "version": {
+                        "type": "string",
+                        "example": "1.0.0"
+                    },
+                    "database": {
+                        "type": "string",
+                        "example": "connected"
+                    }
+                }
+            },
+            "Pagination": {
+                "type": "object",
+                "properties": {
+                    "currentPage": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "totalPages": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "totalItems": {
+                        "type": "integer",
+                        "example": 50
+                    },
+                    "hasNext": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "hasPrev": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                }
+            },
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "error": {
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": "string",
+                                "example": "Error message description"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

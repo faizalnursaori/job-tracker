@@ -16,10 +16,10 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/auth/login">
+              <Link href="/auth/signin">
                 <Button variant="ghost">Login</Button>
               </Link>
-              <Link href="/auth/register">
+              <Link href="/auth/signup">
                 <Button>Get Started</Button>
               </Link>
             </div>
