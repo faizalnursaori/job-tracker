@@ -37,24 +37,23 @@ export default function SignInPage() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      // Traditional login via backend API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+      // Use NextAuth credentials provider for consistent auth flow
+      const result = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        redirect: false,
       })
 
-      const result = await response.json()
-
-      if (result.success) {
-        // Store the token in localStorage for API calls
-        localStorage.setItem('authToken', result.data.token)
+      if (result?.error) {
+        toast.error('Invalid email or password')
+      } else if (result?.ok) {
+        // Get the session to extract the backend token
+        const session = await getSession()
+        if (session?.backendToken) {
+          localStorage.setItem('authToken', session.backendToken)
+        }
         toast.success('Login successful!')
         router.push('/dashboard')
-      } else {
-        toast.error(result.message || 'Login failed')
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -74,12 +73,8 @@ export default function SignInPage() {
 
       if (result?.error) {
         toast.error('OAuth sign-in failed')
-      } else if (result?.url) {
-        // Get the session to extract the backend token
-        const session = await getSession()
-        if (session?.backendToken) {
-          localStorage.setItem('authToken', session.backendToken)
-        }
+      } else if (result?.ok) {
+        // Token storage is now handled automatically by useAuth hook
         router.push('/dashboard')
       }
     } catch (error) {

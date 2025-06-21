@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth'
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import CredentialsProvider from 'next-auth/providers/credentials'
 
 const authOptions: NextAuthOptions = {
   providers: [
@@ -8,13 +9,62 @@ const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        try {
+          // Call our backend login API
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          })
+
+          const result = await response.json()
+
+          if (result.success && result.data.user && result.data.token) {
+            // Return user object that will be stored in the session
+            return {
+              id: result.data.user.id,
+              email: result.data.user.email,
+              name: `${result.data.user.firstName} ${result.data.user.lastName}`,
+              backendToken: result.data.token,
+              backendUser: result.data.user,
+            }
+          }
+          
+          return null
+        } catch (error) {
+          console.error('Credentials authorization error:', error)
+          return null
+        }
+      }
+    }),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
       if (!account || !user.email) return false;
 
+      // Skip OAuth callback for credentials provider
+      if (account.provider === 'credentials') {
+        return true;
+      }
+
       try {
-        // Send user data to our backend OAuth callback
+        // Send user data to our backend OAuth callback (only for OAuth providers)
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/callback`, {
           method: 'POST',
           headers: {

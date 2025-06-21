@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 
 export function useAuth() {
   const { data: session, status } = useSession()
@@ -11,6 +11,17 @@ export function useAuth() {
   const isLoading = status === 'loading'
   const isAuthenticated = status === 'authenticated' && !!session
   const user = session?.user
+
+  // Automatically sync localStorage token with session changes
+  useEffect(() => {
+    if (isAuthenticated && session?.backendToken) {
+      // Store token when session becomes available
+      localStorage.setItem('authToken', session.backendToken)
+    } else if (!isAuthenticated) {
+      // Clear token when session is lost
+      localStorage.removeItem('authToken')
+    }
+  }, [isAuthenticated, session?.backendToken])
 
   const logout = useCallback(async () => {
     // Clear backend token

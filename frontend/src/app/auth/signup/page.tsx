@@ -52,9 +52,7 @@ export default function SignUpPage() {
       const result = await response.json()
 
       if (result.success) {
-        // Store the token in localStorage for API calls
-        localStorage.setItem('authToken', result.data.token)
-        toast.success('Account created successfully!')
+        toast.success('Account created successfully! Please sign in.')
         router.push('/auth/signin')
       } else {
         toast.error(result.error?.message || 'Signup failed')
@@ -77,12 +75,8 @@ export default function SignUpPage() {
 
       if (result?.error) {
         toast.error('OAuth sign-up failed')
-      } else if (result?.url) {
-        // Get the session to extract the backend token
-        const session = await getSession()
-        if (session?.backendToken) {
-          localStorage.setItem('authToken', session.backendToken)
-        }
+      } else if (result?.ok) {
+        // Token storage is now handled automatically by useAuth hook
         router.push('/dashboard')
       }
     } catch (error) {
