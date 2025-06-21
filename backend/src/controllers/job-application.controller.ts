@@ -58,8 +58,7 @@ export const getJobApplications = asyncHandler(async (req: AuthRequest, res: Res
         },
         _count: {
           select: {
-            notes: true,
-            documents: true
+            notes: true
           }
         }
       },
@@ -99,13 +98,6 @@ export const getJobApplication = asyncHandler(async (req: AuthRequest, res: Resp
       status: true,
       notes: {
         orderBy: { noteDate: 'desc' }
-      },
-      documents: {
-        where: { isActive: true },
-        include: {
-          documentType: true
-        },
-        orderBy: { uploadedAt: 'desc' }
       },
       activities: {
         orderBy: { createdAt: 'desc' },

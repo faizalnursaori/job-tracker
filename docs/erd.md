@@ -134,7 +134,6 @@ model JobApplication {
   company   Company                @relation(fields: [companyId], references: [id])
   status    Status                 @relation(fields: [statusId], references: [id])
   notes     ApplicationNote[]
-  documents ApplicationDocument[]
   activities ApplicationActivity[]
 
   @@index([userId])
@@ -164,43 +163,7 @@ model ApplicationNote {
   @@map("application_notes")
 }
 
-model DocumentType {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  isRequired  Boolean  @default(false) @map("is_required")
-  sortOrder   Int      @default(1) @map("sort_order")
-  createdAt   DateTime @default(now()) @map("created_at")
 
-  // Relations
-  documents ApplicationDocument[]
-
-  @@map("document_types")
-}
-
-model ApplicationDocument {
-  id               String   @id @default(cuid())
-  jobApplicationId String   @map("job_application_id")
-  documentTypeId   String   @map("document_type_id")
-  fileName         String   @map("file_name")
-  originalName     String   @map("original_name")
-  filePath         String   @map("file_path")
-  fileType         String   @map("file_type")
-  fileSize         Int      @map("file_size") // in bytes
-  version          String   @default("v1")
-  isActive         Boolean  @default(true) @map("is_active")
-  uploadedAt       DateTime @default(now()) @map("uploaded_at")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  jobApplication JobApplication @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
-  documentType   DocumentType   @relation(fields: [documentTypeId], references: [id])
-
-  @@index([jobApplicationId])
-  @@index([documentTypeId])
-  @@map("application_documents")
-}
 
 model ApplicationActivity {
   id               String   @id @default(cuid())
@@ -239,15 +202,7 @@ model ApplicationActivity {
    - Satu job application dapat memiliki banyak notes
    - `JobApplication.id = ApplicationNote.jobApplicationId`
 
-5. **JobApplication → ApplicationDocument** (1:N)
-   - Satu job application dapat memiliki banyak documents
-   - `JobApplication.id = ApplicationDocument.jobApplicationId`
-
-6. **DocumentType → ApplicationDocument** (1:N)
-   - Satu document type dapat digunakan oleh banyak documents
-   - `DocumentType.id = ApplicationDocument.documentTypeId`
-
-7. **JobApplication → ApplicationActivity** (1:N)
+5. **JobApplication → ApplicationActivity** (1:N)
    - Satu job application dapat memiliki banyak activities (audit trail)
    - `JobApplication.id = ApplicationActivity.jobApplicationId`
 
@@ -258,7 +213,7 @@ model ApplicationActivity {
 - ✅ **Company Database** - Centralized company information
 - ✅ **Job Application Tracking** - Complete job application lifecycle
 - ✅ **Status Management** - Customizable status workflow
-- ✅ **Document Management** - File upload with categorization
+
 - ✅ **Notes System** - Rich note-taking with types
 - ✅ **Activity Tracking** - Audit trail for all changes
 
@@ -295,14 +250,7 @@ const defaultStatuses = [
   { name: 'Accepted', color: '#059669', sortOrder: 8 }
 ]
 
-// Default Document Types
-const defaultDocumentTypes = [
-  { name: 'Resume', description: 'CV or Resume', isRequired: true, sortOrder: 1 },
-  { name: 'Cover Letter', description: 'Personalized cover letter', sortOrder: 2 },
-  { name: 'Portfolio', description: 'Work samples or portfolio', sortOrder: 3 },
-  { name: 'Certificate', description: 'Professional certificates', sortOrder: 4 },
-  { name: 'Transcript', description: 'Academic transcript', sortOrder: 5 }
-]
+
 ```
 
 ## **API ENDPOINTS EXAMPLES**
@@ -320,11 +268,6 @@ GET    /api/companies                 // List companies
 POST   /api/companies                 // Create company
 GET    /api/companies/:id             // Get company
 PUT    /api/companies/:id             // Update company
-
-// Documents
-POST   /api/job-applications/:id/documents    // Upload document
-GET    /api/job-applications/:id/documents    // List documents
-DELETE /api/documents/:id                     // Delete document
 
 // Notes
 POST   /api/job-applications/:id/notes        // Add note

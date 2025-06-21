@@ -31,21 +31,7 @@ async function main() {
 
   console.log(`✅ Created ${statuses.length} statuses`);
 
-  // Seed Document Types
-  const documentTypes = await Promise.all([
-    prisma.documentType.upsert({
-      where: { name: 'Resume' },
-      update: {},
-      create: { name: 'Resume', description: 'CV or Resume', isRequired: true, sortOrder: 1 }
-    }),
-    prisma.documentType.upsert({
-      where: { name: 'Cover Letter' },
-      update: {},
-      create: { name: 'Cover Letter', description: 'Personalized cover letter', sortOrder: 2 }
-    })
-  ]);
 
-  console.log(`✅ Created ${documentTypes.length} document types`);
   console.log('🎉 Seeding completed successfully!');
 }
 

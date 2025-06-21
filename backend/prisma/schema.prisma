@@ -168,7 +168,6 @@ model JobApplication {
   company   Company                @relation(fields: [companyId], references: [id])
   status    Status                 @relation(fields: [statusId], references: [id])
   notes     ApplicationNote[]
-  documents ApplicationDocument[]
   activities ApplicationActivity[]
 
   @@index([userId])
@@ -198,43 +197,7 @@ model ApplicationNote {
   @@map("application_notes")
 }
 
-model DocumentType {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  isRequired  Boolean  @default(false) @map("is_required")
-  sortOrder   Int      @default(1) @map("sort_order")
-  createdAt   DateTime @default(now()) @map("created_at")
 
-  // Relations
-  documents ApplicationDocument[]
-
-  @@map("document_types")
-}
-
-model ApplicationDocument {
-  id               String   @id @default(cuid())
-  jobApplicationId String   @map("job_application_id")
-  documentTypeId   String   @map("document_type_id")
-  fileName         String   @map("file_name")
-  originalName     String   @map("original_name")
-  filePath         String   @map("file_path")
-  fileType         String   @map("file_type")
-  fileSize         Int      @map("file_size") // in bytes
-  version          String   @default("v1")
-  isActive         Boolean  @default(true) @map("is_active")
-  uploadedAt       DateTime @default(now()) @map("uploaded_at")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  jobApplication JobApplication @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
-  documentType   DocumentType   @relation(fields: [documentTypeId], references: [id])
-
-  @@index([jobApplicationId])
-  @@index([documentTypeId])
-  @@map("application_documents")
-}
 
 model ApplicationActivity {
   id               String   @id @default(cuid())

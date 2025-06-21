@@ -136,8 +136,7 @@ The application uses a comprehensive database schema with 8 main entities:
 - **Statuses** - Customizable application statuses
 - **JobApplications** - Core job application data
 - **ApplicationNotes** - Notes for each application
-- **DocumentTypes** - File categorization
-- **ApplicationDocuments** - File attachments
+
 - **ApplicationActivities** - Audit trail
 
 See [ERD Documentation](docs/erd.md) for detailed schema information.

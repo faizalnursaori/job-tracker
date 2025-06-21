@@ -97,7 +97,6 @@ export interface JobApplication {
   status: Status;
   _count?: {
     notes: number;
-    documents: number;
   };
 }
 
