@@ -14,14 +14,17 @@ import { Mail } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 
-const loginSchema = z.object({
+const signupSchema = z.object({
   email: z.string().email('Invalid email format'),
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  phone: z.string().optional(),
 })
 
-type LoginFormData = z.infer<typeof loginSchema>
+type SignupFormData = z.infer<typeof signupSchema>
 
-export default function SignInPage() {
+export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState<string | null>(null)
   const router = useRouter()
@@ -30,15 +33,15 @@ export default function SignInPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
   })
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true)
     try {
-      // Traditional login via backend API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+      // Traditional signup via backend API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,14 +54,14 @@ export default function SignInPage() {
       if (result.success) {
         // Store the token in localStorage for API calls
         localStorage.setItem('authToken', result.data.token)
-        toast.success('Login successful!')
-        router.push('/dashboard')
+        toast.success('Account created successfully!')
+        router.push('/auth/signin')
       } else {
-        toast.error(result.message || 'Login failed')
+        toast.error(result.error?.message || 'Signup failed')
       }
     } catch (error) {
-      console.error('Login error:', error)
-      toast.error('An error occurred during login')
+      console.error('Signup error:', error)
+      toast.error('An error occurred during signup')
     } finally {
       setIsLoading(false)
     }
@@ -73,7 +76,7 @@ export default function SignInPage() {
       })
 
       if (result?.error) {
-        toast.error('OAuth sign-in failed')
+        toast.error('OAuth sign-up failed')
       } else if (result?.url) {
         // Get the session to extract the backend token
         const session = await getSession()
@@ -84,7 +87,7 @@ export default function SignInPage() {
       }
     } catch (error) {
       console.error('OAuth error:', error)
-      toast.error('OAuth sign-in failed')
+      toast.error('OAuth sign-up failed')
     } finally {
       setOauthLoading(null)
     }
@@ -94,9 +97,9 @@ export default function SignInPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Sign in to Job Tracker</CardTitle>
+          <CardTitle className="text-2xl text-center">Create your account</CardTitle>
           <CardDescription className="text-center">
-            Choose your preferred sign-in method
+            Choose your preferred sign-up method
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -126,8 +129,38 @@ export default function SignInPage() {
             </div>
           </div>
 
-          {/* Traditional Login Form */}
+          {/* Traditional Signup Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="Enter your first name"
+                  {...register('firstName')}
+                  className={errors.firstName ? 'border-red-500' : ''}
+                />
+                {errors.firstName && (
+                  <p className="text-sm text-red-500">{errors.firstName.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="Enter your last name"
+                  {...register('lastName')}
+                  className={errors.lastName ? 'border-red-500' : ''}
+                />
+                {errors.lastName && (
+                  <p className="text-sm text-red-500">{errors.lastName.message}</p>
+                )}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -156,19 +189,33 @@ export default function SignInPage() {
               )}
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone (Optional)</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="Enter your phone number"
+                {...register('phone')}
+                className={errors.phone ? 'border-red-500' : ''}
+              />
+              {errors.phone && (
+                <p className="text-sm text-red-500">{errors.phone.message}</p>
+              )}
+            </div>
+
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               ) : (
-                'Sign In'
+                'Create Account'
               )}
             </Button>
           </form>
 
           <div className="text-center text-sm">
-            <span className="text-gray-600">Don't have an account? </span>
-            <Link href="/auth/signup" className="text-blue-600 hover:underline">
-              Sign up
+            <span className="text-gray-600">Already have an account? </span>
+            <Link href="/auth/signin" className="text-blue-600 hover:underline">
+              Sign in
             </Link>
           </div>
         </CardContent>

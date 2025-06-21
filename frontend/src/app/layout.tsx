@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
 import QueryProvider from '@/components/providers/query-provider';
 import NextAuthProvider from '@/components/providers/session-provider';
+import { Navbar } from '@/components/layout/navbar';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,7 +33,10 @@ export default function RootLayout({
       >
         <NextAuthProvider>
           <QueryProvider>
-            {children}
+            <Navbar />
+            <main className="min-h-screen">
+              {children}
+            </main>
           </QueryProvider>
         </NextAuthProvider>
         <Toaster 
