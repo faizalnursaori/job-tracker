@@ -31,6 +31,18 @@ enum EmploymentType {
   INTERNSHIP
 }
 
+enum StatusType {
+  APPLIED
+  PHONE_SCREEN
+  FINAL_INTERVIEW
+  TECHNICAL_TEST
+  OFFER
+  NEGOTIATION
+  ACCEPTED
+  REJECTED
+  ON_HOLD
+}
+
 enum NoteType {
   INTERVIEW
   FOLLOW_UP
@@ -124,25 +136,13 @@ model Company {
   @@map("companies")
 }
 
-model Status {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  color     String?  // Hex color code
-  sortOrder Int      @map("sort_order")
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
 
-  // Relations
-  jobApplications JobApplication[]
-
-  @@map("statuses")
-}
 
 model JobApplication {
   id               String          @id @default(cuid())
   userId           String          @map("user_id")
   companyId        String          @map("company_id")
-  statusId         String          @map("status_id")
+  status           StatusType      @default(APPLIED)
   jobTitle         String          @map("job_title")
   jobLevel         JobLevel?       @map("job_level")
   employmentType   EmploymentType? @map("employment_type")
@@ -166,13 +166,12 @@ model JobApplication {
   // Relations
   user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   company   Company                @relation(fields: [companyId], references: [id])
-  status    Status                 @relation(fields: [statusId], references: [id])
   notes     ApplicationNote[]
   activities ApplicationActivity[]
 
   @@index([userId])
   @@index([companyId])
-  @@index([statusId])
+  @@index([status])
   @@index([appliedDate])
   @@index([priority])
   @@map("job_applications")
@@ -196,8 +195,6 @@ model ApplicationNote {
   @@index([noteDate])
   @@map("application_notes")
 }
-
-
 
 model ApplicationActivity {
   id               String   @id @default(cuid())

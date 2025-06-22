@@ -3,11 +3,12 @@ import { z } from 'zod';
 // Define enums
 const JobLevel = z.enum(['ENTRY', 'MID', 'SENIOR', 'LEAD', 'MANAGER', 'DIRECTOR']);
 const EmploymentType = z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'FREELANCE', 'INTERNSHIP']);
+const StatusType = z.enum(['APPLIED', 'PHONE_SCREEN', 'FINAL_INTERVIEW', 'TECHNICAL_TEST', 'OFFER', 'NEGOTIATION', 'ACCEPTED', 'REJECTED', 'ON_HOLD']);
 
 // Job Application creation schema
 export const createJobApplicationSchema = z.object({
   companyId: z.string().min(1, 'Company is required'),
-  statusId: z.string().min(1, 'Status is required'),
+  status: StatusType.default('APPLIED'),
   jobTitle: z.string().min(1, 'Job title is required').max(255),
   jobLevel: JobLevel.optional(),
   employmentType: EmploymentType.optional(),
@@ -38,7 +39,7 @@ export const createJobApplicationSchema = z.object({
 // Job Application update schema (all fields optional except for validation)
 export const updateJobApplicationSchema = z.object({
   companyId: z.string().min(1, 'Company is required').optional(),
-  statusId: z.string().min(1, 'Status is required').optional(),
+  status: StatusType.optional(),
   jobTitle: z.string().min(1, 'Job title is required').max(255).optional(),
   jobLevel: JobLevel.optional(),
   employmentType: EmploymentType.optional(),
@@ -70,7 +71,7 @@ export const updateJobApplicationSchema = z.object({
 export const jobApplicationQuerySchema = z.object({
   page: z.string().regex(/^\d+$/).transform(Number).default('1'),
   limit: z.string().regex(/^\d+$/).transform(Number).default('10'),
-  status: z.string().optional(),
+  status: StatusType.optional(),
   company: z.string().optional(),
   priority: z.string().regex(/^[1-3]$/).optional(),
   search: z.string().optional(),
