@@ -61,10 +61,21 @@ export interface Company {
   size?: string;
 }
 
+export type StatusType = 
+  | 'APPLIED'
+  | 'PHONE_SCREEN'
+  | 'FINAL_INTERVIEW'
+  | 'TECHNICAL_TEST'
+  | 'OFFER'
+  | 'NEGOTIATION'
+  | 'ACCEPTED'
+  | 'REJECTED'
+  | 'ON_HOLD';
+
 export interface Status {
   id: string;
   name: string;
-  color?: string;
+  value: StatusType;
   sortOrder: number;
   isActive: boolean;
 }
@@ -73,7 +84,7 @@ export interface JobApplication {
   id: string;
   userId: string;
   companyId: string;
-  statusId: string;
+  status: StatusType;
   jobTitle: string;
   jobLevel?: 'ENTRY' | 'MID' | 'SENIOR' | 'LEAD' | 'MANAGER' | 'DIRECTOR';
   employmentType?: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'FREELANCE' | 'INTERNSHIP';
@@ -94,7 +105,6 @@ export interface JobApplication {
   createdAt: string;
   updatedAt: string;
   company: Company;
-  status: Status;
   _count?: {
     notes: number;
   };

@@ -23,7 +23,7 @@ import { jobApplicationsApi, companiesApi, statusesApi } from '@/lib/api';
 interface FormData {
   jobTitle: string;
   companyId: string;
-  statusId: string;
+  status: string;
   jobLevel: string;
   employmentType: string;
   salaryMin: string;
@@ -51,7 +51,7 @@ export default function NewApplicationPage() {
   const [formData, setFormData] = useState<FormData>({
     jobTitle: '',
     companyId: '',
-    statusId: '',
+    status: 'APPLIED',
     jobLevel: '',
     employmentType: '',
     salaryMin: '',
@@ -121,6 +121,7 @@ export default function NewApplicationPage() {
       const payload = {
         ...data,
         companyId,
+        status: data.status as any,
         salaryMin: data.salaryMin ? parseFloat(data.salaryMin) : undefined,
         salaryMax: data.salaryMax ? parseFloat(data.salaryMax) : undefined,
         priority: parseInt(data.priority || '2'),
@@ -183,8 +184,8 @@ export default function NewApplicationPage() {
       newErrors.companyName = 'Company is required';
     }
     
-    if (!formData.statusId) {
-      newErrors.statusId = 'Status is required';
+    if (!formData.status) {
+      newErrors.status = 'Status is required';
     }
     
     if (!formData.appliedDate) {
@@ -398,24 +399,24 @@ export default function NewApplicationPage() {
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
               <Select 
-                value={formData.statusId} 
-                onValueChange={(value) => handleInputChange('statusId', value)}
+                value={formData.status} 
+                onValueChange={(value) => handleInputChange('status', value)}
               >
-                <SelectTrigger className={errors.statusId ? 'border-red-500' : ''}>
+                <SelectTrigger className={errors.status ? 'border-red-500' : ''}>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
                   {statuses.map((status: any) => (
-                    <SelectItem key={status.id} value={status.id}>
+                    <SelectItem key={status.id} value={status.value}>
                       {status.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.statusId && (
+              {errors.status && (
                 <p className="text-sm text-red-600 flex items-center">
                   <AlertCircle className="h-4 w-4 mr-1" />
-                  {errors.statusId}
+                  {errors.status}
                 </p>
               )}
             </div>

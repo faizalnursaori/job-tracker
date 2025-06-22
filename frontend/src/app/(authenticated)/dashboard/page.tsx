@@ -1,51 +1,67 @@
 'use client'
 
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  TrendingUp, 
-  Users, 
-  FileText, 
-  Clock,
-  Plus,
-  ArrowRight,
-  AlertCircle
-} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { FileText, TrendingUp, Users, Clock, Plus, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { jobApplicationsApi } from '@/lib/api';
+import { formatStatusName, getStatusColor } from '@/lib/status-utils';
 
 interface DashboardStats {
   totalApplications: number;
   statusBreakdown: Array<{
     status: string;
-    color?: string;
-    count: number;
+    _count: number;
   }>;
   priorityBreakdown: Array<{
     priority: number;
-    count: number;
+    _count: number;
   }>;
-  recentActivity: Array<{
+  recentApplications: Array<{
     id: string;
     jobTitle: string;
-    company: { name: string };
-    status: { name: string; color?: string };
+    company: { name: string; logoUrl?: string };
+    status: string;
     createdAt: string;
   }>;
+  successRate: number;
 }
 
 export default function DashboardPage() {
-  const { data: statsData, isLoading, error, refetch } = useQuery({
+  const { data: stats, isLoading, error } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const response = await jobApplicationsApi.getStats();
       return response.data.data as DashboardStats;
     },
-    retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 w-4 bg-gray-200 rounded"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -53,108 +69,31 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         </div>
-        
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="flex items-center space-x-2 pt-6">
-            <AlertCircle className="h-5 w-5 text-red-600" />
-            <div className="flex-1">
-              <h3 className="font-medium text-red-800">Error loading dashboard</h3>
-              <p className="text-sm text-red-600">Failed to fetch dashboard statistics</p>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => refetch()}
-              className="border-red-300 text-red-600 hover:bg-red-100"
-            >
-              Try Again
-            </Button>
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-red-600">Error loading dashboard data. Please try again.</p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <div className="h-10 w-32 bg-gray-200 animate-pulse rounded"></div>
-        </div>
-
-        {/* Loading Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
-                <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mb-2"></div>
-                <div className="h-3 w-20 bg-gray-200 animate-pulse rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Loading Content */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4">
-            <CardHeader>
-              <div className="h-6 w-32 bg-gray-200 animate-pulse rounded"></div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-3">
-                  <div className="h-3 w-3 bg-gray-200 animate-pulse rounded-full"></div>
-                  <div className="h-4 w-20 bg-gray-200 animate-pulse rounded"></div>
-                  <div className="h-4 w-8 bg-gray-200 animate-pulse rounded ml-auto"></div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-          
-          <Card className="col-span-3">
-            <CardHeader>
-              <div className="h-6 w-32 bg-gray-200 animate-pulse rounded"></div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-3">
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 w-32 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="h-3 w-20 bg-gray-200 animate-pulse rounded"></div>
-                  </div>
-                  <div className="h-6 w-16 bg-gray-200 animate-pulse rounded"></div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  const stats = statsData || {
+  // Provide default values if stats is undefined
+  const safeStats = stats || {
     totalApplications: 0,
     statusBreakdown: [],
     priorityBreakdown: [],
-    recentActivity: []
+    recentApplications: [],
+    successRate: 0
   };
 
   // Calculate active applications (non-rejected)
-  const activeApplications = stats.statusBreakdown
+  const activeApplications = safeStats.statusBreakdown
     .filter(s => s.status.toLowerCase() !== 'rejected')
-    .reduce((sum, s) => sum + s.count, 0);
+    .reduce((sum, s) => sum + s._count, 0);
 
   // Calculate unique companies (this would be better from a separate API call)
-  const uniqueCompanies = new Set(stats.recentActivity.map(app => app.company.name)).size;
-
-  // Calculate response rate (placeholder calculation)
-  const responseRate = stats.totalApplications > 0 
-    ? Math.round(((activeApplications / stats.totalApplications) * 100)) 
-    : 0;
+  const uniqueCompanies = new Set(safeStats.recentApplications.map(app => app.company.name)).size;
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -180,7 +119,7 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalApplications}</div>
+            <div className="text-2xl font-bold">{safeStats.totalApplications}</div>
             <p className="text-xs text-muted-foreground">
               All time applications
             </p>
@@ -220,14 +159,14 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Response Rate
+              Success Rate
             </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{responseRate}%</div>
+            <div className="text-2xl font-bold">{safeStats.successRate}%</div>
             <p className="text-xs text-muted-foreground">
-              Application success rate
+              Offers received rate
             </p>
           </CardContent>
         </Card>
@@ -240,19 +179,19 @@ export default function DashboardPage() {
             <CardTitle>Application Status</CardTitle>
           </CardHeader>
           <CardContent className="pl-2">
-            {stats.statusBreakdown.length > 0 ? (
+            {safeStats.statusBreakdown.length > 0 ? (
               <div className="space-y-3">
-                {stats.statusBreakdown.map((item, index) => (
+                {safeStats.statusBreakdown.map((item, index) => (
                   <div key={index} className="flex items-center">
                     <div 
                       className="w-3 h-3 rounded-full mr-3"
-                      style={{ backgroundColor: item.color || '#6B7280' }}
+                      style={{ backgroundColor: getStatusColor(item.status) }}
                     />
                     <div className="flex-1 text-sm font-medium">
-                      {item.status}
+                      {formatStatusName(item.status)}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {item.count}
+                      {item._count}
                     </div>
                   </div>
                 ))}
@@ -272,9 +211,9 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {stats.recentActivity.length > 0 ? (
+            {safeStats.recentApplications.length > 0 ? (
               <div className="space-y-3">
-                {stats.recentActivity.map((app) => (
+                {safeStats.recentApplications.map((app) => (
                   <div key={app.id} className="flex items-center">
                     <div className="space-y-1 flex-1">
                       <p className="text-sm font-medium leading-none">
@@ -287,11 +226,11 @@ export default function DashboardPage() {
                     <Badge 
                       variant="outline"
                       style={{ 
-                        borderColor: app.status.color || '#6B7280',
-                        color: app.status.color || '#6B7280'
+                        borderColor: getStatusColor(app.status),
+                        color: getStatusColor(app.status)
                       }}
                     >
-                      {app.status.name}
+                      {formatStatusName(app.status)}
                     </Badge>
                   </div>
                 ))}
@@ -320,12 +259,12 @@ export default function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {stats.priorityBreakdown.length > 0 ? (
+          {safeStats.priorityBreakdown.length > 0 ? (
             <div className="flex space-x-6">
-              {stats.priorityBreakdown.map((item) => (
+              {safeStats.priorityBreakdown.map((item) => (
                 <div key={item.priority} className="text-center">
                   <div className="text-2xl font-bold">
-                    {item.count}
+                    {item._count}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {item.priority === 1 ? "High" : item.priority === 2 ? "Medium" : "Low"}

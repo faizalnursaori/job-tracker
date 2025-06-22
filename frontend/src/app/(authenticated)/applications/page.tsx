@@ -26,31 +26,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { jobApplicationsApi, type JobApplication } from '@/lib/api';
-
-const formatSalary = (min: number, max: number, currency: string) => {
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-  
-  if (min && max) {
-    return `${formatter.format(min)} - ${formatter.format(max)}`;
-  } else if (min) {
-    return `${formatter.format(min)}+`;
-  }
-  return 'Not specified';
-};
-
-const getPriorityLabel = (priority: number) => {
-  switch (priority) {
-    case 1: return { label: "High", color: "destructive" };
-    case 2: return { label: "Medium", color: "default" };
-    case 3: return { label: "Low", color: "secondary" };
-    default: return { label: "Medium", color: "default" };
-  }
-};
+import { formatStatusName, getStatusColor, getPriorityInfo, formatSalary } from '@/lib/status-utils';
 
 export default function ApplicationsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -198,7 +174,7 @@ export default function ApplicationsPage() {
                 </TableHeader>
                 <TableBody>
                   {applications.map((app: JobApplication) => {
-                    const priority = getPriorityLabel(app.priority);
+                    const priority = getPriorityInfo(app.priority);
                     return (
                       <TableRow key={app.id}>
                         <TableCell className="font-medium">
@@ -231,11 +207,11 @@ export default function ApplicationsPage() {
                           <Badge 
                             variant="outline"
                             style={{ 
-                              borderColor: app.status.color || '#6B7280',
-                              color: app.status.color || '#6B7280'
+                              borderColor: getStatusColor(app.status) || '#6B7280',
+                              color: getStatusColor(app.status) || '#6B7280'
                             }}
                           >
-                            {app.status.name}
+                            {formatStatusName(app.status)}
                           </Badge>
                         </TableCell>
                         <TableCell>
