@@ -99,12 +99,25 @@ const authOptions: NextAuthOptions = {
         return false;
       }
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // Persist the OAuth access_token and user data
       if (user) {
         token.backendToken = user.backendToken;
         token.backendUser = user.backendUser;
       }
+      
+      // Handle session updates (when update() is called)
+      if (trigger === 'update' && session) {
+        // Update the token with new user data
+        if (token.backendUser) {
+          token.backendUser = {
+            ...token.backendUser,
+            firstName: session.firstName || token.backendUser.firstName,
+            lastName: session.lastName || token.backendUser.lastName,
+          };
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {
@@ -113,6 +126,10 @@ const authOptions: NextAuthOptions = {
       session.user = {
         ...session.user,
         ...token.backendUser,
+        // Ensure name is constructed from firstName and lastName
+        name: token.backendUser?.firstName && token.backendUser?.lastName 
+          ? `${token.backendUser.firstName} ${token.backendUser.lastName}`
+          : session.user?.name,
       };
       return session;
     },

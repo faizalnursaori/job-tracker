@@ -200,6 +200,24 @@ describe('SignInPage', () => {
     })
   })
 
+  it('toggles password visibility', () => {
+    render(<SignInPage />)
+
+    const passwordInput = screen.getByLabelText(/password/i)
+    const toggleButton = screen.getByRole('button', { name: '' }) // Eye/EyeOff button
+
+    // Initially password should be hidden
+    expect(passwordInput).toHaveAttribute('type', 'password')
+
+    // Click to show password
+    fireEvent.click(toggleButton)
+    expect(passwordInput).toHaveAttribute('type', 'text')
+
+    // Click to hide password again
+    fireEvent.click(toggleButton)
+    expect(passwordInput).toHaveAttribute('type', 'password')
+  })
+
   it('handles OAuth sign-in error', async () => {
     mockSignIn.mockResolvedValueOnce({
       error: 'OAuth error',

@@ -4,6 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   BriefcaseIcon, 
   Building2Icon, 
@@ -11,7 +17,9 @@ import {
   LogOutIcon, 
   UserIcon,
   MenuIcon,
-  XIcon
+  XIcon,
+  SettingsIcon,
+  ChevronDownIcon
 } from "lucide-react";
 import { useState } from "react";
 
@@ -91,20 +99,34 @@ export function Navbar() {
               </nav>
 
               {/* User Menu - Right Side */}
-              <div className="hidden md:flex items-center space-x-4">
-                <div className="flex items-center space-x-2 text-sm text-gray-700">
-                  <UserIcon className="h-4 w-4" />
-                  <span>Welcome, {user?.name || user?.email}</span>
-                </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={logout}
-                  className="flex items-center space-x-1 hover:cursor-pointer hover:bg-gray-200"
-                >
-                  <LogOutIcon className="h-4 w-4" />
-                  <span>Logout</span>
-                </Button>
+              <div className="hidden md:flex items-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                    >
+                      <UserIcon className="h-4 w-4" />
+                      <span>Welcome, {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.name || user?.email}</span>
+                      <ChevronDownIcon className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" className="flex items-center space-x-2 w-full">
+                        <SettingsIcon className="h-4 w-4" />
+                        <span>Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={logout}
+                      className="flex items-center space-x-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+                    >
+                      <LogOutIcon className="h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </>
           )}
@@ -163,11 +185,25 @@ export function Navbar() {
                     );
                   })}
 
+                  {/* Mobile Settings Link */}
+                  <Link
+                    href="/profile"
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                      isActive("/profile")
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <SettingsIcon className="h-5 w-5" />
+                    <span>Settings</span>
+                  </Link>
+
                   {/* Mobile User Info */}
                   <div className="px-3 py-2 border-t">
                     <div className="flex items-center space-x-2 text-sm text-gray-700 mb-2">
                       <UserIcon className="h-4 w-4" />
-                      <span>{user?.name || user?.email}</span>
+                      <span>{user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.name || user?.email}</span>
                     </div>
                     <Button
                       variant="secondary"

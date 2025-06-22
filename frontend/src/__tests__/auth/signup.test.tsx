@@ -51,6 +51,7 @@ describe('SignUpPage', () => {
     expect(screen.getByLabelText('Last Name')).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
     expect(screen.getByLabelText('Password')).toBeInTheDocument()
+    expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument()
     expect(screen.getByLabelText('Phone (Optional)')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create Account' })).toBeInTheDocument()
   })
@@ -309,5 +310,102 @@ describe('SignUpPage', () => {
     const signinLink = screen.getByRole('link', { name: 'Sign in' })
     expect(signinLink).toBeInTheDocument()
     expect(signinLink).toHaveAttribute('href', '/auth/signin')
+  })
+
+  it('validates password confirmation', async () => {
+    render(<SignUpPage />)
+    
+    // Fill form with mismatched passwords
+    fireEvent.change(screen.getByLabelText('First Name'), { target: { value: 'John' } })
+    fireEvent.change(screen.getByLabelText('Last Name'), { target: { value: 'Doe' } })
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'test@example.com' } })
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText('Confirm Password'), { target: { value: 'different123' } })
+    
+    const submitButton = screen.getByRole('button', { name: 'Create Account' })
+    fireEvent.click(submitButton)
+    
+    await waitFor(() => {
+      expect(screen.getByText("Passwords don't match")).toBeInTheDocument()
+    })
+    
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('toggles password visibility', () => {
+    render(<SignUpPage />)
+
+    const passwordInput = screen.getByLabelText('Password')
+    const confirmPasswordInput = screen.getByLabelText('Confirm Password')
+    
+    // Get toggle buttons (there should be 2)
+    const toggleButtons = screen.getAllByRole('button', { name: '' })
+    const passwordToggle = toggleButtons[0]
+    const confirmPasswordToggle = toggleButtons[1]
+
+    // Initially passwords should be hidden
+    expect(passwordInput).toHaveAttribute('type', 'password')
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password')
+
+    // Click to show password
+    fireEvent.click(passwordToggle)
+    expect(passwordInput).toHaveAttribute('type', 'text')
+
+    // Click to show confirm password
+    fireEvent.click(confirmPasswordToggle)
+    expect(confirmPasswordInput).toHaveAttribute('type', 'text')
+
+    // Click to hide passwords again
+    fireEvent.click(passwordToggle)
+    fireEvent.click(confirmPasswordToggle)
+    expect(passwordInput).toHaveAttribute('type', 'password')
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password')
+  })
+
+  it('submits form with matching passwords', async () => {
+    const mockResponse = {
+      success: true,
+      data: {
+        user: {
+          id: '1',
+          email: 'test@example.com',
+          firstName: 'John',
+          lastName: 'Doe'
+        },
+        token: 'mock-jwt-token'
+      }
+    }
+    
+    ;(fetch as jest.Mock).mockResolvedValueOnce({
+      json: jest.fn().mockResolvedValue(mockResponse),
+    })
+    
+    render(<SignUpPage />)
+    
+    // Fill form with matching passwords
+    fireEvent.change(screen.getByLabelText('First Name'), { target: { value: 'John' } })
+    fireEvent.change(screen.getByLabelText('Last Name'), { target: { value: 'Doe' } })
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'test@example.com' } })
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } })
+    
+    const submitButton = screen.getByRole('button', { name: 'Create Account' })
+    fireEvent.click(submitButton)
+    
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'test@example.com',
+          password: 'password123',
+          // Note: confirmPassword should not be in the request
+        }),
+      })
+    })
   })
 }) 
