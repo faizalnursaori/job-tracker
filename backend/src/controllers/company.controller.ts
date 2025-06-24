@@ -72,12 +72,7 @@ export const getCompany = asyncHandler(async (req: Request, res: Response) => {
         select: {
           id: true,
           jobTitle: true,
-          status: {
-            select: {
-              name: true,
-              color: true
-            }
-          },
+          status: true,
           appliedDate: true,
           priority: true
         },

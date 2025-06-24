@@ -147,34 +147,35 @@ export const getUserStats = asyncHandler(async (req: AuthRequest, res: Response)
     
     prisma.jobApplication.findMany({
       where: { userId },
-      include: {
-        company: { select: { name: true } },
-        status: { select: { name: true, color: true } }
+      select: {
+        id: true,
+        jobTitle: true,
+        status: true,
+        appliedDate: true,
+        company: {
+          select: { name: true }
+        }
       },
       orderBy: { createdAt: 'desc' },
       take: 5
     }),
 
     prisma.jobApplication.groupBy({
-      by: ['statusId'],
+      by: ['status'],
       where: { userId },
-      _count: { statusId: true }
+      _count: { status: true }
     })
   ]);
 
-  // Get status names for breakdown
-  const statusIds = statusBreakdown.map((s: any) => s.statusId);
-  const statuses = await prisma.status.findMany({
-    where: { id: { in: statusIds } },
-    select: { id: true, name: true, color: true }
-  });
-
   const statusStats = statusBreakdown.map((stat: any) => {
-    const status = statuses.find((s: any) => s.id === stat.statusId);
+    const statusName = stat.status.split('_').map((word: string) => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+    
     return {
-      status: status?.name || 'Unknown',
-      color: status?.color,
-      count: stat._count.statusId
+      status: statusName,
+      value: stat.status,
+      count: stat._count.status
     };
   });
 

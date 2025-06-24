@@ -15,7 +15,6 @@ describe('User Profile API', () => {
     await prisma.session.deleteMany();
     await prisma.user.deleteMany();
     await prisma.company.deleteMany();
-    await prisma.status.deleteMany();
 
     // Create test user
     const response = await request(app)
@@ -38,7 +37,6 @@ describe('User Profile API', () => {
     await prisma.jobApplication.deleteMany();
     await prisma.user.deleteMany();
     await prisma.company.deleteMany();
-    await prisma.status.deleteMany();
   });
 
   describe('GET /api/users/profile', () => {
@@ -196,19 +194,11 @@ describe('User Profile API', () => {
 
   describe('GET /api/users/stats', () => {
     beforeEach(async () => {
-      // Create test company and status
+      // Create test company
       const company = await prisma.company.create({
         data: {
           name: 'Test Company',
           industry: 'Technology'
-        }
-      });
-
-      const status = await prisma.status.create({
-        data: {
-          name: 'Applied',
-          color: '#3B82F6',
-          sortOrder: 1
         }
       });
 
@@ -218,14 +208,14 @@ describe('User Profile API', () => {
           {
             userId,
             companyId: company.id,
-            statusId: status.id,
+            status: 'APPLIED',
             jobTitle: 'Software Engineer',
             appliedDate: new Date()
           },
           {
             userId,
             companyId: company.id,
-            statusId: status.id,
+            status: 'APPLIED',
             jobTitle: 'Frontend Developer',
             appliedDate: new Date()
           }

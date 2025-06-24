@@ -14,6 +14,7 @@ import companyRoutes from './routes/company.routes';
 import statusRoutes from './routes/status.routes';
 import noteRoutes from './routes/note.routes';
 import userRoutes from './routes/user.routes';
+import activityRoutes from './routes/activity.routes';
 
 // Import middleware
 import { errorHandler } from './middlewares/error.middleware';
@@ -42,6 +43,7 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/statuses', statusRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/activities', activityRoutes);
 
 // 404 Handler
 app.use('*', (req, res) => {

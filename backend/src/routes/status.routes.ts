@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { authMiddleware } from '../middlewares/auth.middleware';
 import {
   getStatuses,
   getStatus,
@@ -11,11 +12,11 @@ import {
 const router = Router();
 
 // Status Routes
-router.get('/', getStatuses);
-router.get('/:id', getStatus);
-router.post('/', createStatus);
-router.put('/:id', updateStatus);
-router.delete('/:id', deleteStatus);
-router.post('/reorder', reorderStatuses);
+router.get('/', authMiddleware, getStatuses);
+router.get('/:id', authMiddleware, getStatus);
+router.post('/', authMiddleware, createStatus);
+router.put('/:id', authMiddleware, updateStatus);
+router.delete('/:id', authMiddleware, deleteStatus);
+router.post('/reorder', authMiddleware, reorderStatuses);
 
 export default router; 

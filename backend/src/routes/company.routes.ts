@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { authMiddleware } from '../middlewares/auth.middleware';
 import {
   getCompanies,
   getCompany,
@@ -11,11 +12,11 @@ import {
 const router = Router();
 
 // Company Routes
-router.get('/', getCompanies);
-router.get('/suggestions', getCompanySuggestions);
-router.get('/:id', getCompany);
-router.post('/', createCompany);
-router.put('/:id', updateCompany);
-router.delete('/:id', deleteCompany);
+router.get('/', authMiddleware, getCompanies);
+router.get('/suggestions', authMiddleware, getCompanySuggestions);
+router.get('/:id', authMiddleware, getCompany);
+router.post('/', authMiddleware, createCompany);
+router.put('/:id', authMiddleware, updateCompany);
+router.delete('/:id', authMiddleware, deleteCompany);
 
 export default router; 
