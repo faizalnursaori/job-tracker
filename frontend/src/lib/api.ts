@@ -122,6 +122,22 @@ export interface ApplicationNote {
   updatedAt: string;
 }
 
+export interface ApplicationActivity {
+  id: string;
+  jobApplicationId: string;
+  activity: string;
+  description?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  jobApplication?: {
+    id: string;
+    jobTitle: string;
+    company: {
+      name: string;
+    };
+  };
+}
+
 // Auth API
 export const authApi = {
   register: (data: {
@@ -211,4 +227,35 @@ export const notesApi = {
     api.put(`/notes/${id}`, data),
 
   delete: (id: string) => api.delete(`/notes/${id}`),
+};
+
+// Activities API
+export const activitiesApi = {
+  getAll: (params?: {
+    jobApplicationId?: string;
+    limit?: number;
+    offset?: number;
+  }) => api.get('/activities', { params }),
+
+  getById: (id: string) => api.get(`/activities/${id}`),
+
+  getByJobApplication: (jobApplicationId: string, params?: {
+    limit?: number;
+    offset?: number;
+  }) => api.get(`/activities/job-application/${jobApplicationId}`, { params }),
+
+  create: (data: {
+    jobApplicationId: string;
+    activity: string;
+    description?: string;
+    metadata?: Record<string, any>;
+  }) => api.post('/activities', data),
+
+  update: (id: string, data: {
+    activity?: string;
+    description?: string;
+    metadata?: Record<string, any>;
+  }) => api.put(`/activities/${id}`, data),
+
+  delete: (id: string) => api.delete(`/activities/${id}`),
 }; 
