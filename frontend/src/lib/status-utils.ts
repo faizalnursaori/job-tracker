@@ -22,15 +22,15 @@ export const getStatusColor = (status: string) => {
 // Helper function to get priority info
 export const getPriorityInfo = (priority: number) => {
   switch (priority) {
-    case 1: return { label: "High", color: "destructive" as const };
-    case 2: return { label: "Medium", color: "default" as const };
-    case 3: return { label: "Low", color: "secondary" as const };
-    default: return { label: "Medium", color: "default" as const };
+    case 1: return { label: "High", variant: "destructive" as const };
+    case 2: return { label: "Medium", variant: "default" as const };
+    case 3: return { label: "Low", variant: "secondary" as const };
+    default: return { label: "Medium", variant: "default" as const };
   }
 };
 
 // Helper function to format salary
-export const formatSalary = (min: number, max: number, currency: string) => {
+export const formatSalary = (min?: number, max?: number, currency: string = 'IDR') => {
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency,
@@ -42,6 +42,8 @@ export const formatSalary = (min: number, max: number, currency: string) => {
     return `${formatter.format(min)} - ${formatter.format(max)}`;
   } else if (min) {
     return `${formatter.format(min)}+`;
+  } else if (max) {
+    return `Up to ${formatter.format(max)}`;
   }
   return 'Not specified';
 }; 

@@ -154,18 +154,78 @@ export const authApi = {
   getProfile: () => api.get('/auth/profile'),
 };
 
+// Enhanced filter types
+export interface JobApplicationFilters {
+  // Pagination
+  page?: number;
+  limit?: number;
+  
+  // Basic filters
+  status?: StatusType | StatusType[];
+  company?: string;
+  priority?: number | number[];
+  
+  // Advanced filters
+  jobLevel?: JobApplication['jobLevel'] | JobApplication['jobLevel'][];
+  employmentType?: JobApplication['employmentType'] | JobApplication['employmentType'][];
+  location?: string;
+  isRemote?: boolean;
+  isFavorite?: boolean;
+  source?: string;
+  
+  // Date range filters
+  appliedDateFrom?: string;
+  appliedDateTo?: string;
+  responseDeadlineFrom?: string;
+  responseDeadlineTo?: string;
+  
+  // Salary range filters
+  salaryMin?: number;
+  salaryMax?: number;
+  currency?: string;
+  
+  // Search options
+  search?: string;
+  searchFields?: ('jobTitle' | 'companyName' | 'personalNotes' | 'jobDescription' | 'requirements' | 'location')[];
+  
+  // Sorting
+  sortBy?: 'createdAt' | 'appliedDate' | 'jobTitle' | 'priority' | 'salaryMin' | 'salaryMax' | 'companyName';
+  sortOrder?: 'asc' | 'desc';
+  
+  // Advanced options
+  hasNotes?: boolean;
+  hasDeadline?: boolean;
+  isOverdue?: boolean;
+}
+
+export interface FilterOptions {
+  companies?: { id: string; name: string }[];
+  statuses?: StatusType[];
+  jobLevels?: JobApplication['jobLevel'][];
+  employmentTypes?: JobApplication['employmentType'][];
+  sources?: string[];
+  locations?: string[];
+  priorities: { value: number; label: string }[];
+  currencies: string[];
+  searchFields: { value: string; label: string }[];
+}
+
+export interface FilterOptionsQuery {
+  includeCompanies?: boolean;
+  includeStatuses?: boolean;
+  includeJobLevels?: boolean;
+  includeEmploymentTypes?: boolean;
+  includeSources?: boolean;
+  includeLocations?: boolean;
+}
+
 // Job Applications API
 export const jobApplicationsApi = {
-  getAll: (params?: {
-    page?: number;
-    limit?: number;
-    status?: string;
-    company?: string;
-    priority?: number;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-  }) => api.get('/job-applications', { params }),
+  getAll: (filters?: JobApplicationFilters) => 
+    api.get('/job-applications', { params: filters }),
+
+  getFilterOptions: (query?: FilterOptionsQuery) =>
+    api.get('/job-applications/filter-options', { params: query }),
 
   getById: (id: string) => api.get(`/job-applications/${id}`),
 
