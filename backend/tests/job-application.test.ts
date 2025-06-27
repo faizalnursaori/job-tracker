@@ -244,4 +244,6 @@ describe('Job Applications API', () => {
         .expect(404);
     });
   });
-}); 
+});
+
+ 

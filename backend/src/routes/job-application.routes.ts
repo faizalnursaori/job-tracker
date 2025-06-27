@@ -6,7 +6,8 @@ import {
   createJobApplication,
   updateJobApplication,
   deleteJobApplication,
-  getJobApplicationStats
+  getJobApplicationStats,
+  getFilterOptions
 } from '../controllers/job-application.controller';
 
 const router = Router();
@@ -14,6 +15,7 @@ const router = Router();
 // Job Application Routes
 router.get('/', authMiddleware, getJobApplications);
 router.get('/stats', authMiddleware, getJobApplicationStats);
+router.get('/filter-options', authMiddleware, getFilterOptions);
 router.get('/:id', authMiddleware, getJobApplication);
 router.post('/', authMiddleware, createJobApplication);
 router.put('/:id', authMiddleware, updateJobApplication);

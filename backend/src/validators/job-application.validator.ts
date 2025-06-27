@@ -67,21 +67,65 @@ export const updateJobApplicationSchema = z.object({
   path: ['salaryMax']
 });
 
-// Query parameters schema
+// Enhanced query parameters schema with advanced filters
 export const jobApplicationQuerySchema = z.object({
+  // Pagination
   page: z.string().regex(/^\d+$/).transform(Number).default('1'),
   limit: z.string().regex(/^\d+$/).transform(Number).default('10'),
-  status: StatusType.optional(),
+  
+  // Basic filters
+  status: z.union([StatusType, z.array(StatusType)]).optional(),
   company: z.string().optional(),
-  priority: z.string().regex(/^[1-3]$/).optional(),
-  search: z.string().optional(),
-  sortBy: z.enum(['createdAt', 'appliedDate', 'jobTitle', 'priority']).default('createdAt'),
-  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  priority: z.union([
+    z.string().regex(/^[1-3]$/).transform(Number),
+    z.array(z.string().regex(/^[1-3]$/).transform(Number))
+  ]).optional(),
+  
+  // Advanced filters
+  jobLevel: z.union([JobLevel, z.array(JobLevel)]).optional(),
+  employmentType: z.union([EmploymentType, z.array(EmploymentType)]).optional(),
+  location: z.string().optional(),
+  isRemote: z.string().transform(val => val === 'true').optional(),
   isFavorite: z.string().transform(val => val === 'true').optional(),
-  isRemote: z.string().transform(val => val === 'true').optional()
+  source: z.string().optional(),
+  
+  // Date range filters
+  appliedDateFrom: z.string().datetime().optional(),
+  appliedDateTo: z.string().datetime().optional(),
+  responseDeadlineFrom: z.string().datetime().optional(),
+  responseDeadlineTo: z.string().datetime().optional(),
+  
+  // Salary range filters
+  salaryMin: z.string().regex(/^\d+(\.\d+)?$/).transform(Number).optional(),
+  salaryMax: z.string().regex(/^\d+(\.\d+)?$/).transform(Number).optional(),
+  currency: z.string().optional(),
+  
+  // Search options
+  search: z.string().optional(),
+  searchFields: z.array(z.enum(['jobTitle', 'companyName', 'personalNotes', 'jobDescription', 'requirements', 'location'])).optional(),
+  
+  // Sorting
+  sortBy: z.enum(['createdAt', 'appliedDate', 'jobTitle', 'priority', 'salaryMin', 'salaryMax', 'companyName']).default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  
+  // Advanced options
+  hasNotes: z.string().transform(val => val === 'true').optional(),
+  hasDeadline: z.string().transform(val => val === 'true').optional(),
+  isOverdue: z.string().transform(val => val === 'true').optional()
+});
+
+// Filter options schema for getting available filter values
+export const filterOptionsSchema = z.object({
+  includeCompanies: z.string().transform(val => val === 'true').default('true'),
+  includeStatuses: z.string().transform(val => val === 'true').default('true'),
+  includeJobLevels: z.string().transform(val => val === 'true').default('true'),
+  includeEmploymentTypes: z.string().transform(val => val === 'true').default('true'),
+  includeSources: z.string().transform(val => val === 'true').default('true'),
+  includeLocations: z.string().transform(val => val === 'true').default('true')
 });
 
 // Export types
 export type CreateJobApplicationInput = z.infer<typeof createJobApplicationSchema>;
 export type UpdateJobApplicationInput = z.infer<typeof updateJobApplicationSchema>;
-export type JobApplicationQuery = z.infer<typeof jobApplicationQuerySchema>; 
+export type JobApplicationQuery = z.infer<typeof jobApplicationQuerySchema>;
+export type FilterOptionsQuery = z.infer<typeof filterOptionsSchema>; 
