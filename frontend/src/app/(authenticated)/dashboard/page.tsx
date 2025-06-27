@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+// Removed unused React hooks
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import Link from "next/link";
 import { jobApplicationsApi } from '@/lib/api';
 import { formatStatusName, getStatusColor } from '@/lib/status-utils';
 
+// Local dashboard stats interface (specific to this component)
 interface DashboardStats {
   totalApplications: number;
   statusBreakdown: Array<{

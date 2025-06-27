@@ -1,4 +1,12 @@
 import axios from 'axios';
+import {
+  type Company,
+  type Status,
+  type JobApplication,
+  type ApplicationNote,
+  type JobApplicationFilters,
+  type FilterOptionsQuery,
+} from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -38,105 +46,7 @@ api.interceptors.response.use(
   }
 );
 
-// API Types based on backend
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  profileImage?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Company {
-  id: string;
-  name: string;
-  industry?: string;
-  website?: string;
-  location?: string;
-  description?: string;
-  logoUrl?: string;
-  size?: string;
-}
-
-export type StatusType = 
-  | 'APPLIED'
-  | 'PHONE_SCREEN'
-  | 'FINAL_INTERVIEW'
-  | 'TECHNICAL_TEST'
-  | 'OFFER'
-  | 'NEGOTIATION'
-  | 'ACCEPTED'
-  | 'REJECTED'
-  | 'ON_HOLD';
-
-export interface Status {
-  id: string;
-  name: string;
-  value: StatusType;
-  sortOrder: number;
-  isActive: boolean;
-}
-
-export interface JobApplication {
-  id: string;
-  userId: string;
-  companyId: string;
-  status: StatusType;
-  jobTitle: string;
-  jobLevel?: 'ENTRY' | 'MID' | 'SENIOR' | 'LEAD' | 'MANAGER' | 'DIRECTOR';
-  employmentType?: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'FREELANCE' | 'INTERNSHIP';
-  salaryMin?: number;
-  salaryMax?: number;
-  currency: string;
-  location?: string;
-  isRemote: boolean;
-  jobUrl?: string;
-  jobDescription?: string;
-  requirements?: string;
-  appliedDate: string;
-  responseDeadline?: string;
-  personalNotes?: string;
-  priority: number;
-  isFavorite: boolean;
-  source?: string;
-  createdAt: string;
-  updatedAt: string;
-  company: Company;
-  _count?: {
-    notes: number;
-  };
-}
-
-export interface ApplicationNote {
-  id: string;
-  jobApplicationId: string;
-  title: string;
-  content: string;
-  noteType: 'INTERVIEW' | 'FOLLOW_UP' | 'FEEDBACK' | 'RESEARCH' | 'REMINDER' | 'OTHER';
-  noteDate: string;
-  isImportant: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ApplicationActivity {
-  id: string;
-  jobApplicationId: string;
-  activity: string;
-  description?: string;
-  metadata?: Record<string, any>;
-  createdAt: string;
-  jobApplication?: {
-    id: string;
-    jobTitle: string;
-    company: {
-      name: string;
-    };
-  };
-}
+// Types are now imported from @/types
 
 // Auth API
 export const authApi = {
@@ -154,70 +64,7 @@ export const authApi = {
   getProfile: () => api.get('/auth/profile'),
 };
 
-// Enhanced filter types
-export interface JobApplicationFilters {
-  // Pagination
-  page?: number;
-  limit?: number;
-  
-  // Basic filters
-  status?: StatusType | StatusType[];
-  company?: string;
-  priority?: number | number[];
-  
-  // Advanced filters
-  jobLevel?: JobApplication['jobLevel'] | JobApplication['jobLevel'][];
-  employmentType?: JobApplication['employmentType'] | JobApplication['employmentType'][];
-  location?: string;
-  isRemote?: boolean;
-  isFavorite?: boolean;
-  source?: string;
-  
-  // Date range filters
-  appliedDateFrom?: string;
-  appliedDateTo?: string;
-  responseDeadlineFrom?: string;
-  responseDeadlineTo?: string;
-  
-  // Salary range filters
-  salaryMin?: number;
-  salaryMax?: number;
-  currency?: string;
-  
-  // Search options
-  search?: string;
-  searchFields?: ('jobTitle' | 'companyName' | 'personalNotes' | 'jobDescription' | 'requirements' | 'location')[];
-  
-  // Sorting
-  sortBy?: 'createdAt' | 'appliedDate' | 'jobTitle' | 'priority' | 'salaryMin' | 'salaryMax' | 'companyName';
-  sortOrder?: 'asc' | 'desc';
-  
-  // Advanced options
-  hasNotes?: boolean;
-  hasDeadline?: boolean;
-  isOverdue?: boolean;
-}
-
-export interface FilterOptions {
-  companies?: { id: string; name: string }[];
-  statuses?: StatusType[];
-  jobLevels?: JobApplication['jobLevel'][];
-  employmentTypes?: JobApplication['employmentType'][];
-  sources?: string[];
-  locations?: string[];
-  priorities: { value: number; label: string }[];
-  currencies: string[];
-  searchFields: { value: string; label: string }[];
-}
-
-export interface FilterOptionsQuery {
-  includeCompanies?: boolean;
-  includeStatuses?: boolean;
-  includeJobLevels?: boolean;
-  includeEmploymentTypes?: boolean;
-  includeSources?: boolean;
-  includeLocations?: boolean;
-}
+// Filter types are now imported from @/types
 
 // Job Applications API
 export const jobApplicationsApi = {
@@ -308,13 +155,13 @@ export const activitiesApi = {
     jobApplicationId: string;
     activity: string;
     description?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   }) => api.post('/activities', data),
 
   update: (id: string, data: {
     activity?: string;
     description?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   }) => api.put(`/activities/${id}`, data),
 
   delete: (id: string) => api.delete(`/activities/${id}`),

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,12 +18,12 @@ import {
   DollarSign,
   Flag,
   Star,
-  StarIcon,
   Loader2
 } from "lucide-react";
 import Link from "next/link";
 import toast from 'react-hot-toast';
-import { jobApplicationsApi, type JobApplication } from '@/lib/api';
+import { jobApplicationsApi } from '@/lib/api';
+import { type JobApplication } from '@/types';
 import { formatStatusName, getStatusColor, getPriorityInfo, formatSalary } from '@/lib/status-utils';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -50,15 +49,48 @@ export default function ApplicationDetailPage() {
       toast.success('Application deleted successfully');
       router.push('/applications');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to delete application');
+    onError: (error: unknown) => {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : 'Failed to delete application';
+      toast.error(errorMessage || 'Failed to delete application');
     },
   });
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
-      deleteApplicationMutation.mutate();
-    }
+    toast.custom((t) => (
+      <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200 max-w-md">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex-shrink-0">
+            <Trash2 className="h-5 w-5 text-red-500" />
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-900">Delete Application</h3>
+            <p className="text-sm text-gray-600">Are you sure you want to delete this application? This action cannot be undone.</p>
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              deleteApplicationMutation.mutate();
+            }}
+            className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity,
+      position: 'top-center',
+    });
   };
 
   if (isLoading) {
@@ -86,7 +118,7 @@ export default function ApplicationDetailPage() {
           <CardHeader>
             <CardTitle className="text-red-600">Application Not Found</CardTitle>
             <CardDescription>
-              The job application you're looking for doesn't exist or you don't have permission to view it.
+              The job application you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -162,7 +194,7 @@ export default function ApplicationDetailPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="space-y-1">
                   <div className="text-sm text-muted-foreground">Priority</div>
-                  <Badge variant={priority.color as any}>{priority.label}</Badge>
+                  <Badge variant={priority.variant}>{priority.label}</Badge>
                 </div>
                 <div className="space-y-1">
                   <div className="text-sm text-muted-foreground">Applied</div>

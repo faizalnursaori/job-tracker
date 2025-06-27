@@ -10,7 +10,7 @@ interface ActivityItem {
   activity: string;
   description?: string;
   createdAt: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface ActivityTimelineProps {
@@ -115,7 +115,7 @@ export function ActivityTimeline({ activities, className }: ActivityTimelineProp
           <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
           
           <div className="space-y-6">
-            {activities.map((activity, index) => (
+            {activities.map((activity) => (
               <div key={activity.id} className="relative flex items-start gap-4">
                 {/* Timeline dot */}
                 <div className={cn(

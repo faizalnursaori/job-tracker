@@ -101,11 +101,12 @@ export default function NewApplicationPage() {
             name: data.companyName,
           });
           companyId = companyResponse.data.data.company.id;
-        } catch (error: any) {
+        } catch (error: unknown) {
           // If company already exists, try to find it
-          if (error.response?.status === 400) {
+          const errorObj = error as { response?: { status?: number } };
+          if (errorObj.response?.status === 400) {
             const existingCompany = companies.find(
-              (company: any) => company.name.toLowerCase() === data.companyName!.toLowerCase()
+              (company: { id: string; name: string }) => company.name.toLowerCase() === data.companyName!.toLowerCase()
             );
             if (existingCompany) {
               companyId = existingCompany.id;
@@ -121,7 +122,7 @@ export default function NewApplicationPage() {
       const payload = {
         ...data,
         companyId,
-        status: data.status as any,
+        status: data.status as 'APPLIED' | 'PHONE_SCREEN' | 'TECHNICAL_TEST' | 'FINAL_INTERVIEW' | 'OFFER' | 'NEGOTIATION' | 'ACCEPTED' | 'REJECTED' | 'ON_HOLD',
         salaryMin: data.salaryMin ? parseFloat(data.salaryMin) : undefined,
         salaryMax: data.salaryMax ? parseFloat(data.salaryMax) : undefined,
         priority: parseInt(data.priority || '2'),
@@ -129,8 +130,8 @@ export default function NewApplicationPage() {
         responseDeadline: data.responseDeadline 
           ? new Date(data.responseDeadline).toISOString() 
           : undefined,
-        jobLevel: (data.jobLevel || undefined) as any,
-        employmentType: (data.employmentType || undefined) as any,
+        jobLevel: (data.jobLevel || undefined) as 'ENTRY' | 'MID' | 'SENIOR' | 'LEAD' | 'MANAGER' | 'DIRECTOR' | undefined,
+        employmentType: (data.employmentType || undefined) as 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'FREELANCE' | undefined,
       };
       
       // Remove companyName from payload as backend expects companyId
@@ -147,13 +148,14 @@ export default function NewApplicationPage() {
       toast.success('Application created successfully!');
       router.push('/applications');
     },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || 'Failed to create application';
+    onError: (error: unknown) => {
+      const errorObj = error as { response?: { data?: { message?: string; errors?: Partial<FormData> } } };
+      const errorMessage = errorObj.response?.data?.message || 'Failed to create application';
       toast.error(errorMessage);
       
       // Handle validation errors
-      if (error.response?.data?.errors) {
-        setErrors(error.response.data.errors);
+      if (errorObj.response?.data?.errors) {
+        setErrors(errorObj.response.data.errors);
       }
     },
   });
@@ -212,7 +214,7 @@ export default function NewApplicationPage() {
     try {
       new URL(string);
       return true;
-    } catch (_) {
+    } catch {
       return false;
     }
   };
@@ -228,7 +230,7 @@ export default function NewApplicationPage() {
     setIsLoading(true);
     try {
       await createApplicationMutation.mutateAsync(formData);
-    } catch (error) {
+    } catch {
       // Error handling is done in the mutation
     } finally {
       setIsLoading(false);
@@ -255,14 +257,14 @@ export default function NewApplicationPage() {
         </div>
 
         <div className="space-y-6">
-          {[...Array(4)].map((_, i) => (
+          {Array.from({ length: 4 }, (_, i) => (
             <Card key={i}>
               <CardHeader>
                 <div className="h-6 w-32 bg-gray-200 animate-pulse rounded"></div>
                 <div className="h-4 w-64 bg-gray-200 animate-pulse rounded"></div>
               </CardHeader>
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[...Array(4)].map((_, j) => (
+                {Array.from({ length: 4 }, (_, j) => (
                   <div key={j} className="space-y-2">
                     <div className="h-4 w-20 bg-gray-200 animate-pulse rounded"></div>
                     <div className="h-10 w-full bg-gray-200 animate-pulse rounded"></div>
@@ -332,7 +334,7 @@ export default function NewApplicationPage() {
                     if (value.length >= 2) {
                       // Find matching company
                       const matchingCompany = companies.find(
-                        (company: any) => company.name.toLowerCase().includes(value.toLowerCase())
+                        (company: { id: string; name: string }) => company.name.toLowerCase().includes(value.toLowerCase())
                       );
                       if (matchingCompany) {
                         handleInputChange('companyId', matchingCompany.id);
@@ -350,12 +352,12 @@ export default function NewApplicationPage() {
                 {formData.companyName && formData.companyName.length >= 2 && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-auto">
                     {companies
-                      .filter((company: any) => 
+                      .filter((company: { id: string; name: string; industry?: string }) => 
                         company.name.toLowerCase().includes(formData.companyName.toLowerCase()) &&
                         company.name.toLowerCase() !== formData.companyName.toLowerCase()
                       )
                       .slice(0, 5)
-                      .map((company: any) => (
+                      .map((company: { id: string; name: string; industry?: string }) => (
                         <button
                           key={company.id}
                           type="button"
@@ -375,12 +377,12 @@ export default function NewApplicationPage() {
                     
                     {/* Show "Create new company" option if no exact match */}
                     {formData.companyName && 
-                     !companies.some((company: any) => 
+                     !companies.some((company: { id: string; name: string }) => 
                        company.name.toLowerCase() === formData.companyName.toLowerCase()
                      ) && (
                       <div className="px-3 py-2 border-t border-gray-100">
                         <div className="text-sm text-gray-600">
-                          Create new company: <span className="font-medium">"{formData.companyName}"</span>
+                          Create new company: <span className="font-medium">&quot;{formData.companyName}&quot;</span>
                         </div>
                       </div>
                     )}
@@ -406,7 +408,7 @@ export default function NewApplicationPage() {
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  {statuses.map((status: any) => (
+                  {statuses.map((status: { id: string; value: string; name: string }) => (
                     <SelectItem key={status.id} value={status.value}>
                       {status.name}
                     </SelectItem>

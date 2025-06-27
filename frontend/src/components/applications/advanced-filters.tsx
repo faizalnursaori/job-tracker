@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,20 +8,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Separator } from "@/components/ui/separator";
+
 import { 
   X, 
   Filter,
-  CalendarIcon,
-  DollarSign,
+
   Search,
   SlidersHorizontal,
-  Check,
+
   ChevronDown
 } from "lucide-react";
-import { jobApplicationsApi, type JobApplicationFilters, type FilterOptions } from '@/lib/api';
+import { jobApplicationsApi } from '@/lib/api';
+import { type JobApplicationFilters, type FilterOptions } from '@/types';
 import { cn } from "@/lib/utils";
 
 interface AdvancedFiltersProps {
@@ -45,7 +43,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const updateFilter = (key: keyof JobApplicationFilters, value: any) => {
+  const updateFilter = (key: keyof JobApplicationFilters, value: unknown) => {
     const newFilters = { ...tempFilters, [key]: value };
     setTempFilters(newFilters);
     onFiltersChange(newFilters);
@@ -58,7 +56,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
     onFiltersChange(newFilters);
   };
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setTempFilters({
       page: tempFilters.page,
       limit: tempFilters.limit,
@@ -67,11 +65,9 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
     });
     onReset();
     setShowAdvanced(false);
-  };
+  }, [tempFilters.page, tempFilters.limit, tempFilters.sortBy, tempFilters.sortOrder, onReset]);
 
-  const handleReset = () => {
-    clearAllFilters();
-  };
+
 
   const activeFiltersCount = Object.keys(filters).filter(key => 
     key !== 'page' && key !== 'limit' && key !== 'sortBy' && key !== 'sortOrder' && filters[key as keyof JobApplicationFilters]
@@ -90,7 +86,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [activeFiltersCount, clearAllFilters]);
 
-  const formatFilterLabel = (key: string, value: any): string => {
+  const formatFilterLabel = (key: string, value: string | number | boolean | string[] | number[]): string => {
     switch (key) {
       case 'status':
         return Array.isArray(value) ? `Status: ${value.join(', ')}` : `Status: ${value}`;
@@ -108,13 +104,13 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
       case 'isFavorite':
         return value ? 'Favorites Only' : 'Not Favorites';
       case 'salaryMin':
-        return `Min Salary: ${new Intl.NumberFormat().format(value)}`;
+        return `Min Salary: ${new Intl.NumberFormat().format(value as number)}`;
       case 'salaryMax':
-        return `Max Salary: ${new Intl.NumberFormat().format(value)}`;
+        return `Max Salary: ${new Intl.NumberFormat().format(value as number)}`;
       case 'appliedDateFrom':
-        return `Applied From: ${new Date(value).toLocaleDateString()}`;
+        return `Applied From: ${new Date(value as string).toLocaleDateString()}`;
       case 'appliedDateTo':
-        return `Applied To: ${new Date(value).toLocaleDateString()}`;
+        return `Applied To: ${new Date(value as string).toLocaleDateString()}`;
       case 'location':
         return `Location: ${value}`;
       case 'source':
@@ -528,7 +524,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
                 })}
               </div>
               <div className="text-xs text-muted-foreground">
-                Click the × on any filter to remove it, or use "Clear all" to reset all filters.
+                Click the × on any filter to remove it, or use &quot;Clear all&quot; to reset all filters.
                 <br />
                 <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">Ctrl</kbd> + <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">Backspace</kbd> to clear all filters quickly.
               </div>

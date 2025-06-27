@@ -15,18 +15,20 @@ export default function QueryProvider({
         defaultOptions: {
           queries: {
             staleTime: 5 * 60 * 1000, // 5 minutes
-            retry: (failureCount, error: any) => {
+            retry: (failureCount, error: unknown) => {
               // Don't retry on 4xx errors except 401
-              if (error?.response?.status >= 400 && error?.response?.status < 500) {
-                return error?.response?.status === 401 ? false : false;
+              const errorObj = error as { response?: { status?: number } };
+              if (errorObj?.response?.status && errorObj.response.status >= 400 && errorObj.response.status < 500) {
+                return errorObj.response.status === 401 ? false : false;
               }
               return failureCount < 3;
             },
           },
           mutations: {
-            retry: (failureCount, error: any) => {
+            retry: (failureCount, error: unknown) => {
               // Don't retry mutations on client errors
-              if (error?.response?.status >= 400 && error?.response?.status < 500) {
+              const errorObj = error as { response?: { status?: number } };
+              if (errorObj?.response?.status && errorObj.response.status >= 400 && errorObj.response.status < 500) {
                 return false;
               }
               return failureCount < 2;

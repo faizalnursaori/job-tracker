@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,14 @@ import {
   AlertCircle
 } from "lucide-react";
 import Link from "next/link";
-import { jobApplicationsApi, type JobApplication, type JobApplicationFilters } from '@/lib/api';
+import toast from 'react-hot-toast';
+import { jobApplicationsApi } from '@/lib/api';
+import { type JobApplication, type JobApplicationFilters } from '@/types';
 import { formatStatusName, getStatusColor, getPriorityInfo, formatSalary } from '@/lib/status-utils';
 import { AdvancedFilters } from '@/components/applications/advanced-filters';
 
 export default function ApplicationsPage() {
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<JobApplicationFilters>({
     page: 1,
     limit: 10,
@@ -44,6 +47,21 @@ export default function ApplicationsPage() {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
+  const deleteApplicationMutation = useMutation({
+    mutationFn: (applicationId: string) => jobApplicationsApi.delete(applicationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Application deleted successfully');
+    },
+    onError: (error: unknown) => {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : 'Failed to delete application';
+      toast.error(errorMessage || 'Failed to delete application');
+    },
+  });
+
   const handleFiltersChange = (newFilters: JobApplicationFilters) => {
     setFilters({ ...newFilters, page: 1 }); // Reset to first page when filters change
   };
@@ -59,6 +77,44 @@ export default function ApplicationsPage() {
 
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }));
+  };
+
+  const handleDelete = (applicationId: string, jobTitle: string, companyName: string) => {
+    toast.custom((t) => (
+      <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200 max-w-md">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex-shrink-0">
+            <Trash2 className="h-5 w-5 text-red-500" />
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-900">Delete Application</h3>
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete the application for <strong>{jobTitle}</strong> at <strong>{companyName}</strong>? This action cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              deleteApplicationMutation.mutate(applicationId);
+            }}
+            className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity,
+      position: 'top-center',
+    });
   };
 
   if (error) {
@@ -197,7 +253,7 @@ export default function ApplicationsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={priority.variant as any}>
+                          <Badge variant={priority.variant}>
                             {priority.label}
                           </Badge>
                         </TableCell>
@@ -247,7 +303,13 @@ export default function ApplicationsPage() {
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </Link>
-                            <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleDelete(app.id, app.jobTitle, app.company.name)}
+                              disabled={deleteApplicationMutation.isPending}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>

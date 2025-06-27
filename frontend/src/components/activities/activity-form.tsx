@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,20 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus } from "lucide-react";
-import { ApplicationActivity, activitiesApi } from "@/lib/api";
-
-interface ActivityFormProps {
-  activity?: ApplicationActivity;
-  jobApplicationId: string;
-  onSuccess: () => void;
-  onCancel: () => void;
-  hideHeader?: boolean;
-}
-
-interface MetadataItem {
-  key: string;
-  value: string;
-}
+import { activitiesApi } from "@/lib/api";
+import { type ActivityFormProps, type MetadataItem } from "@/types";
 
 export function ActivityForm({ activity, jobApplicationId, onSuccess, onCancel, hideHeader = false }: ActivityFormProps) {
   const [formData, setFormData] = useState({
@@ -79,7 +67,7 @@ export function ActivityForm({ activity, jobApplicationId, onSuccess, onCancel, 
                 acc[item.key] = item.value;
               }
               return acc;
-            }, {} as Record<string, any>)
+            }, {} as Record<string, unknown>)
           : undefined
       };
 
@@ -90,10 +78,11 @@ export function ActivityForm({ activity, jobApplicationId, onSuccess, onCancel, 
       }
 
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving activity:', error);
+      const errorObj = error as { response?: { data?: { message?: string } } };
       setErrors({
-        submit: error.response?.data?.message || 'Failed to save activity'
+        submit: errorObj.response?.data?.message || 'Failed to save activity'
       });
     } finally {
       setIsSubmitting(false);

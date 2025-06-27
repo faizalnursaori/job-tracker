@@ -15,32 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import toast from 'react-hot-toast';
-import { jobApplicationsApi, companiesApi, statusesApi, type JobApplication } from '@/lib/api';
-
-interface FormData {
-  jobTitle: string;
-  companyName: string;
-  status: string;
-  jobLevel: string;
-  employmentType: string;
-  salaryMin: string;
-  salaryMax: string;
-  currency: string;
-  location: string;
-  isRemote: boolean;
-  jobUrl: string;
-  jobDescription: string;
-  requirements: string;
-  appliedDate: string;
-  responseDeadline: string;
-  personalNotes: string;
-  priority: string;
-  source: string;
-  isFavorite: boolean;
-}
+import { jobApplicationsApi, companiesApi } from '@/lib/api';
+import { type JobApplication, type JobApplicationFormData } from '@/types';
 
 export default function EditApplicationPage() {
   const params = useParams();
@@ -48,9 +27,9 @@ export default function EditApplicationPage() {
   const queryClient = useQueryClient();
   const applicationId = params.id as string;
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [errors, setErrors] = useState<Partial<JobApplicationFormData>>({});
   
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<JobApplicationFormData>({
     jobTitle: '',
     companyName: '',
     status: 'APPLIED',
@@ -85,7 +64,7 @@ export default function EditApplicationPage() {
 
 
   // Fetch companies
-  const { data: companiesData, isLoading: companiesLoading } = useQuery({
+  const { data: companiesData } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       const response = await companiesApi.getAll({ limit: 100 });
@@ -93,14 +72,14 @@ export default function EditApplicationPage() {
     },
   });
 
-  // Fetch statuses
-  const { data: statusesData, isLoading: statusesLoading } = useQuery({
-    queryKey: ['statuses'],
-    queryFn: async () => {
-      const response = await statusesApi.getAll();
-      return response.data.data;
-    },
-  });
+  // Fetch statuses - for future use
+  // const { data: statusesData } = useQuery({
+  //   queryKey: ['statuses'],
+  //   queryFn: async () => {
+  //     const response = await statusesApi.getAll();
+  //     return response.data.data;
+  //   },
+  // });
 
   // Populate form when data is loaded
   useEffect(() => {
@@ -132,14 +111,14 @@ export default function EditApplicationPage() {
 
   // Update application mutation
   const updateApplicationMutation = useMutation({
-    mutationFn: async (data: Partial<FormData>) => {
+    mutationFn: async (data: Partial<JobApplicationFormData>) => {
       // Handle company creation/lookup if needed
       let companyId;
       
       if (data.companyName) {
         // First, try to find existing company by name
         const existingCompany = companies.find(
-          (company: any) => company.name.toLowerCase() === data.companyName!.toLowerCase()
+          (company: { id: string; name: string }) => company.name.toLowerCase() === data.companyName!.toLowerCase()
         );
         
         if (existingCompany) {
@@ -151,16 +130,17 @@ export default function EditApplicationPage() {
               name: data.companyName,
             });
             companyId = companyResponse.data.data.company.id;
-          } catch (error: any) {
+          } catch (error: unknown) {
             // If company already exists, try to find it by refetching companies
-            if (error.response?.status === 400 && error.response?.data?.message?.includes('already exists')) {
+            const errorObj = error as { response?: { status?: number; data?: { message?: string } } };
+            if (errorObj.response?.status === 400 && errorObj.response?.data?.message?.includes('already exists')) {
               try {
                 // Refetch companies to get the latest list
                 const companiesResponse = await companiesApi.getAll({ limit: 100 });
                 const updatedCompanies = companiesResponse.data.data.companies || [];
                 
                 const existingCompany = updatedCompanies.find(
-                  (company: any) => company.name.toLowerCase() === data.companyName!.toLowerCase()
+                  (company: { id: string; name: string }) => company.name.toLowerCase() === data.companyName!.toLowerCase()
                 );
                 
                 if (existingCompany) {
@@ -168,7 +148,7 @@ export default function EditApplicationPage() {
                 } else {
                   throw error;
                 }
-              } catch (refetchError) {
+              } catch {
                 throw error;
               }
             } else {
@@ -181,7 +161,7 @@ export default function EditApplicationPage() {
       const payload = {
         ...data,
         companyId,
-        status: data.status as any,
+        status: data.status as 'APPLIED' | 'PHONE_SCREEN' | 'TECHNICAL_TEST' | 'FINAL_INTERVIEW' | 'OFFER' | 'NEGOTIATION' | 'ACCEPTED' | 'REJECTED' | 'ON_HOLD',
         salaryMin: data.salaryMin ? parseFloat(data.salaryMin) : undefined,
         salaryMax: data.salaryMax ? parseFloat(data.salaryMax) : undefined,
         priority: parseInt(data.priority || '2'),
@@ -189,8 +169,8 @@ export default function EditApplicationPage() {
         responseDeadline: data.responseDeadline 
           ? new Date(data.responseDeadline).toISOString() 
           : undefined,
-        jobLevel: (data.jobLevel || undefined) as any,
-        employmentType: (data.employmentType || undefined) as any,
+        jobLevel: (data.jobLevel || undefined) as 'ENTRY' | 'MID' | 'SENIOR' | 'LEAD' | 'MANAGER' | 'DIRECTOR' | undefined,
+        employmentType: (data.employmentType || undefined) as 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'FREELANCE' | undefined,
       };
       
       // Remove companyName from payload as backend expects companyId
@@ -208,18 +188,19 @@ export default function EditApplicationPage() {
       toast.success('Application updated successfully!');
       router.push(`/applications/${applicationId}`);
     },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || 'Failed to update application';
+    onError: (error: unknown) => {
+      const errorObj = error as { response?: { data?: { message?: string; errors?: Partial<JobApplicationFormData> } } };
+      const errorMessage = errorObj.response?.data?.message || 'Failed to update application';
       toast.error(errorMessage);
       
       // Handle validation errors
-      if (error.response?.data?.errors) {
-        setErrors(error.response.data.errors);
+      if (errorObj.response?.data?.errors) {
+        setErrors(errorObj.response.data.errors);
       }
     },
   });
 
-  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
+  const handleInputChange = (field: keyof JobApplicationFormData, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -235,7 +216,7 @@ export default function EditApplicationPage() {
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<FormData> = {};
+    const newErrors: Partial<JobApplicationFormData> = {};
     
     if (!formData.jobTitle.trim()) {
       newErrors.jobTitle = 'Job title is required';
@@ -273,7 +254,7 @@ export default function EditApplicationPage() {
     try {
       new URL(string);
       return true;
-    } catch (_) {
+    } catch {
       return false;
     }
   };
@@ -295,7 +276,6 @@ export default function EditApplicationPage() {
   };
 
   const companies = companiesData?.companies || [];
-  const statuses = statusesData?.statuses || [];
 
   if (applicationLoading) {
     return (
@@ -322,7 +302,7 @@ export default function EditApplicationPage() {
           <CardHeader>
             <CardTitle className="text-red-600">Application Not Found</CardTitle>
             <CardDescription>
-              The job application you're trying to edit doesn't exist or you don't have permission to edit it.
+              The job application you&apos;re trying to edit doesn&apos;t exist or you don&apos;t have permission to edit it.
             </CardDescription>
           </CardHeader>
         </Card>

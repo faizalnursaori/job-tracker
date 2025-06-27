@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ActivityTimeline } from "@/components/ui/activity-timeline";
 import { ActivityForm } from "./activity-form";
-import { ApplicationActivity, activitiesApi } from "@/lib/api";
+import { ApplicationActivity } from "@/types";
+import { activitiesApi } from "@/lib/api";
 import { MoreHorizontal, Plus, Edit, Trash2, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -28,7 +29,7 @@ export function ActivityList({ jobApplicationId }: ActivityListProps) {
   });
   const [deleting, setDeleting] = useState(false);
 
-  const fetchActivities = async () => {
+  const fetchActivities = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -36,17 +37,18 @@ export function ActivityList({ jobApplicationId }: ActivityListProps) {
       const response = await activitiesApi.getByJobApplication(jobApplicationId);
       console.log('Activities response:', response.data);
       setActivities(response.data.data?.activities || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching activities:', error);
-      setError(error.response?.data?.message || 'Failed to load activities');
+      const errorObj = error as { response?: { data?: { message?: string } } };
+      setError(errorObj.response?.data?.message || 'Failed to load activities');
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobApplicationId]);
 
   useEffect(() => {
     fetchActivities();
-  }, [jobApplicationId]);
+  }, [fetchActivities]);
 
   const handleCreateActivity = () => {
     setEditingActivity(null);
@@ -66,9 +68,10 @@ export function ActivityList({ jobApplicationId }: ActivityListProps) {
       await activitiesApi.delete(deleteDialog.activity.id);
       setActivities(activities.filter(a => a.id !== deleteDialog.activity!.id));
       setDeleteDialog({ open: false, activity: null });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting activity:', error);
-      setError(error.response?.data?.message || 'Failed to delete activity');
+      const errorObj = error as { response?: { data?: { message?: string } } };
+      setError(errorObj.response?.data?.message || 'Failed to delete activity');
     } finally {
       setDeleting(false);
     }
