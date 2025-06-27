@@ -13,8 +13,13 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "db:seed": "ts-node prisma/seed.ts",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs postgres",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts"
   },
