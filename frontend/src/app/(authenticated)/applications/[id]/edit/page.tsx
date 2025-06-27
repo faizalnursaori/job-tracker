@@ -132,8 +132,8 @@ export default function EditApplicationPage() {
             companyId = companyResponse.data.data.company.id;
           } catch (error: unknown) {
             // If company already exists, try to find it by refetching companies
-            const errorObj = error as { response?: { status?: number; data?: { message?: string } } };
-            if (errorObj.response?.status === 400 && errorObj.response?.data?.message?.includes('already exists')) {
+            const errorObj = error as { response?: { status?: number; data?: { error?: { message?: string } } } };
+            if (errorObj.response?.status === 400 && errorObj.response?.data?.error?.message?.includes('already exists')) {
               try {
                 // Refetch companies to get the latest list
                 const companiesResponse = await companiesApi.getAll({ limit: 100 });
@@ -189,8 +189,8 @@ export default function EditApplicationPage() {
       router.push(`/applications/${applicationId}`);
     },
     onError: (error: unknown) => {
-      const errorObj = error as { response?: { data?: { message?: string; errors?: Partial<JobApplicationFormData> } } };
-      const errorMessage = errorObj.response?.data?.message || 'Failed to update application';
+      const errorObj = error as { response?: { data?: { error?: { message?: string }; errors?: Partial<JobApplicationFormData> } } };
+      const errorMessage = errorObj.response?.data?.error?.message || 'Failed to update application';
       toast.error(errorMessage);
       
       // Handle validation errors

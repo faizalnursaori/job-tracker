@@ -80,9 +80,9 @@ export function ActivityForm({ activity, jobApplicationId, onSuccess, onCancel, 
       onSuccess();
     } catch (error: unknown) {
       console.error('Error saving activity:', error);
-      const errorObj = error as { response?: { data?: { message?: string } } };
+      const errorObj = error as { response?: { data?: { error?: { message?: string } } } };
       setErrors({
-        submit: errorObj.response?.data?.message || 'Failed to save activity'
+        submit: errorObj.response?.data?.error?.message || 'Failed to save activity'
       });
     } finally {
       setIsSubmitting(false);

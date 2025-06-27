@@ -39,8 +39,8 @@ export function ActivityList({ jobApplicationId }: ActivityListProps) {
       setActivities(response.data.data?.activities || []);
     } catch (error: unknown) {
       console.error('Error fetching activities:', error);
-      const errorObj = error as { response?: { data?: { message?: string } } };
-      setError(errorObj.response?.data?.message || 'Failed to load activities');
+              const errorObj = error as { response?: { data?: { error?: { message?: string } } } };
+        setError(errorObj.response?.data?.error?.message || 'Failed to load activities');
     } finally {
       setLoading(false);
     }
@@ -70,8 +70,8 @@ export function ActivityList({ jobApplicationId }: ActivityListProps) {
       setDeleteDialog({ open: false, activity: null });
     } catch (error: unknown) {
       console.error('Error deleting activity:', error);
-      const errorObj = error as { response?: { data?: { message?: string } } };
-      setError(errorObj.response?.data?.message || 'Failed to delete activity');
+              const errorObj = error as { response?: { data?: { error?: { message?: string } } } };
+        setError(errorObj.response?.data?.error?.message || 'Failed to delete activity');
     } finally {
       setDeleting(false);
     }

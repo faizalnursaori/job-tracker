@@ -51,7 +51,7 @@ export default function ApplicationDetailPage() {
     },
     onError: (error: unknown) => {
       const errorMessage = error && typeof error === 'object' && 'response' in error
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        ? (error as { response?: { data?: { error?: { message?: string } } } }).response?.data?.error?.message
         : 'Failed to delete application';
       toast.error(errorMessage || 'Failed to delete application');
     },

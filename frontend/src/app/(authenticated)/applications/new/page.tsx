@@ -149,8 +149,8 @@ export default function NewApplicationPage() {
       router.push('/applications');
     },
     onError: (error: unknown) => {
-      const errorObj = error as { response?: { data?: { message?: string; errors?: Partial<FormData> } } };
-      const errorMessage = errorObj.response?.data?.message || 'Failed to create application';
+      const errorObj = error as { response?: { data?: { error?: { message?: string }; errors?: Partial<FormData> } } };
+      const errorMessage = errorObj.response?.data?.error?.message || 'Failed to create application';
       toast.error(errorMessage);
       
       // Handle validation errors
