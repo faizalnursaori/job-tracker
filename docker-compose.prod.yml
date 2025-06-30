@@ -21,7 +21,7 @@ services:
     networks:
       - job-tracker-network
     command: >
-      sh -c "node dist/server.js"
+      sh -c "node dist/src/server.js"
 
   # Frontend
   frontend:
