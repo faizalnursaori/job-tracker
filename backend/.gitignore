@@ -1,5 +1,32 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Node modules
+node_modules/
 
-/generated/prisma
+# Output folders
+dist/
+build/
+
+# Environment variables
+.env
+.env.*     # ignore .env.production, .env.local, dsb
+
+# Prisma generated client (if re-generated in build)
+generated/
+generated/prisma/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS/system files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.sw?
+
+# Docker
+*.local
+docker-compose.override.yml

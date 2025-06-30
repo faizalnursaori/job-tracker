@@ -5,33 +5,47 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Seed Statuses
-  const statuses = await Promise.all([
-    prisma.status.upsert({
-      where: { name: 'Applied' },
+  // Seed Companies
+  const companies = await Promise.all([
+    prisma.company.upsert({
+      where: { name: 'Google' },
       update: {},
-      create: { name: 'Applied', color: '#3B82F6', sortOrder: 1 }
+      create: {
+        name: 'Google',
+        industry: 'Technology',
+        website: 'https://google.com',
+        location: 'Mountain View, CA',
+        description: 'Search engine and technology company',
+        size: '10000+'
+      }
     }),
-    prisma.status.upsert({
-      where: { name: 'Phone Screen' },
+    prisma.company.upsert({
+      where: { name: 'Microsoft' },
       update: {},
-      create: { name: 'Phone Screen', color: '#F59E0B', sortOrder: 2 }
+      create: {
+        name: 'Microsoft',
+        industry: 'Technology',
+        website: 'https://microsoft.com',
+        location: 'Redmond, WA',
+        description: 'Software and cloud services company',
+        size: '10000+'
+      }
     }),
-    prisma.status.upsert({
-      where: { name: 'Offer' },
+    prisma.company.upsert({
+      where: { name: 'Meta' },
       update: {},
-      create: { name: 'Offer', color: '#10B981', sortOrder: 5 }
-    }),
-    prisma.status.upsert({
-      where: { name: 'Rejected' },
-      update: {},
-      create: { name: 'Rejected', color: '#EF4444', sortOrder: 6 }
+      create: {
+        name: 'Meta',
+        industry: 'Technology',
+        website: 'https://meta.com',
+        location: 'Menlo Park, CA',
+        description: 'Social media and virtual reality company',
+        size: '10000+'
+      }
     })
   ]);
 
-  console.log(`✅ Created ${statuses.length} statuses`);
-
-
+  console.log(`✅ Created ${companies.length} companies`);
   console.log('🎉 Seeding completed successfully!');
 }
 
