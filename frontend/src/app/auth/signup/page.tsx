@@ -13,6 +13,7 @@ import { Mail, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { signupSchema, type SignupFormData } from '@/schemas'
+import { authApi } from '@/lib/api'
 
 export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -36,26 +37,22 @@ export default function SignUpPage() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, ...signupData } = data
       
-      // Traditional signup via backend API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(signupData),
-      })
+      // Traditional signup via backend API using the API client
+      const response = await authApi.register(signupData)
 
-      const result = await response.json()
-
-      if (result.success) {
+      if (response.data.success) {
         toast.success('Account created successfully! Please sign in.')
         router.push('/auth/signin')
       } else {
-        toast.error(result.error?.message || 'Signup failed')
+        toast.error('Signup failed')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup error:', error)
-      toast.error('An error occurred during signup')
+      if (error.response?.data?.error?.message) {
+        toast.error(error.response.data.error.message)
+      } else {
+        toast.error('An error occurred during signup')
+      }
     } finally {
       setIsLoading(false)
     }
