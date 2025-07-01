@@ -18,6 +18,16 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 COPY public ./public
 
+# Accept build arguments for environment variables
+ARG NEXT_PUBLIC_API_URL
+ARG NEXTAUTH_SECRET
+ARG NEXTAUTH_URL
+
+# Set environment variables for build
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+ENV NEXTAUTH_URL=$NEXTAUTH_URL
+
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm install -g pnpm@9.15.0 && pnpm build
