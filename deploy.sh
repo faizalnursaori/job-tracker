@@ -55,9 +55,10 @@ ssh $SERVER_USER@$SERVER_IP "mkdir -p $APP_DIR"
 echo "📤 Copying files to server..."
 rsync -avz --exclude='.git' --exclude='node_modules' --exclude='.next' --exclude='dist' . $SERVER_USER@$SERVER_IP:$APP_DIR/
 
-# Copy environment file
+# Copy environment files
 echo "📤 Copying environment configuration..."
 scp .env $SERVER_USER@$SERVER_IP:$APP_DIR/.env
+scp frontend/.env $SERVER_USER@$SERVER_IP:$APP_DIR/frontend/.env
 
 # Deploy on server
 echo "🏗️  Building and starting containers on server..."
