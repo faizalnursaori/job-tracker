@@ -3,6 +3,16 @@ import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 
+// Use internal container URL for server-side API calls
+const getApiUrl = () => {
+  // If we're running on the server (NextAuth callbacks), use internal container communication
+  if (typeof window === 'undefined') {
+    return 'http://backend:5000/api'
+  }
+  // If we're on the client, use the public API URL
+  return `${process.env.NEXT_PUBLIC_API_URL}/api`
+}
+
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -21,8 +31,9 @@ const authOptions: NextAuthOptions = {
         }
 
         try {
-          // Call our backend login API
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+          // Call our backend login API using internal container communication
+          const apiUrl = getApiUrl()
+          const response = await fetch(`${apiUrl}/auth/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -65,7 +76,8 @@ const authOptions: NextAuthOptions = {
 
       try {
         // Send user data to our backend OAuth callback (only for OAuth providers)
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/callback`, {
+        const apiUrl = getApiUrl()
+        const response = await fetch(`${apiUrl}/auth/oauth/callback`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
